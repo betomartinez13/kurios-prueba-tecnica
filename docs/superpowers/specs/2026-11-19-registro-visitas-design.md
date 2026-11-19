@@ -66,6 +66,20 @@ lógica importante (validación, borrado lógico) vive en Django, donde se prueb
 
 Para el stack de frontend se consideró también HTML + JS sin framework; el usuario eligió Next.js.
 
+Otras decisiones con alternativas, todas tomadas por el usuario:
+- **Lógica de negocio**: *services + selectors (HackSoft)* frente a *DRF clásico* (la
+  lógica en `validate()`/`create()` del serializer). Se eligió services + selectors: las
+  reglas quedan en un solo sitio y se prueban sin pasar por HTTP, a cambio de dos archivos
+  más.
+- **Tipos de la API en el frontend**: *generados desde OpenAPI* frente a *escritos a mano*.
+  Se eligieron los generados: un desajuste rompe la compilación, a cambio de un paso de
+  generación (`make types`).
+- **Dependencias de Python**: *uv + pyproject* frente a *pip + requirements.txt*. Se eligió
+  uv por tener versiones fijadas y reproducibles.
+- **Tests del frontend**: *E2E con Playwright* frente a *Vitest unitario* o *solo lint +
+  tsc*. Se eligió E2E: prueba los flujos reales de punta a punta, a cambio de necesitar el
+  stack levantado.
+
 ## Decisiones tomadas
 
 ### Modelo de datos (usuario: el docente pertenece a un colegio)
@@ -135,20 +149,22 @@ observaciones con solo espacios cuentan como vacías.
   `teacher_name`, `visit_type_label`), para que el frontend no tenga que cruzar datos.
 - Filtros con `django-filter` (`FilterSet` con `school` y `visit_type`). Un valor de tipo
   inválido responde 400; nunca devuelve en silencio una lista vacía.
-- `VisitViewSet` (`ModelViewSet`) con `select_related("school", "teacher")` en el
-  queryset, para evitar consultas N+1 al serializar los nombres. Colegios y docentes
-  son `ReadOnlyModelViewSet`.
-- `destroy()` se sobrescribe para hacer el borrado lógico (un método `soft_delete()` en el
-  modelo) en vez de `instance.delete()`.
+- `VisitViewSet` (`ViewSet` con las acciones `list`, `retrieve`, `create`, `update`,
+  `partial_update` y `destroy`) **delega en la capa de servicios y selectors** (ver
+  "Arquitectura del backend"). No hereda de `ModelViewSet` porque la lógica de escritura
+  no debe vivir en `perform_create`/`perform_update`. Colegios y docentes son
+  `ReadOnlyModelViewSet` sencillos: no tienen lógica de negocio.
+- `destroy` llama a `visit_soft_delete()` y nunca a `instance.delete()`.
 - Permisos: `AllowAny` declarado **explícitamente** en settings de DRF, con un comentario
   de que la app no tiene autenticación por alcance. Se anota en el README como lo primero
   a añadir en una siguiente iteración.
-- La validación de coherencia colegio-docente va en `VisitSerializer.validate()` (a nivel
-  de objeto) y el error se asigna al campo `teacher`, para que el frontend lo pinte junto
-  al select de docente.
-- Configuración por variables de entorno (`SECRET_KEY`, `DEBUG`, `DATABASE_URL` o sus
-  partes, `TIME_ZONE`, credenciales del superusuario de demo), con un `.env.example`
-  versionado. Ningún secreto queda en `settings.py`.
+- Esquema OpenAPI generado con `drf-spectacular` (`/api/schema/`) y Swagger UI en
+  `/api/docs/`. Las vistas se anotan con `@extend_schema` (serializers de entrada y
+  salida, filtros, respuestas 400/404) para que el schema sea exacto, porque de él se
+  generan los tipos del frontend.
+- Configuración por variables de entorno leídas con `django-environ` (`SECRET_KEY`,
+  `DEBUG`, `DATABASE_URL`, `TIME_ZONE`, credenciales del superusuario de demo), con un
+  `.env.example` versionado. Ningún secreto queda en `settings.py`.
 - Sin paginación (fuera de alcance; se menciona como mejora).
 - Los errores siguen el formato estándar de DRF (`{campo: [mensajes]}`), y el frontend los
   muestra junto a cada campo.
@@ -159,10 +175,8 @@ Se fija Next.js 16.3+ porque desde esa versión `next dev` genera `AGENTS.md`/`C
 con las buenas prácticas oficiales de Vercel (el antiguo skill `next-best-practices` ya
 no existe), y el implementador debe seguirlas.
 
-Una pequeña capa `lib/api.ts` con funciones tipadas (`listVisits`, `getVisit`, `createVisit`, …)
-y tipos compartidos en `lib/types.ts`. `lib/api.ts` normaliza los errores en un único tipo
-(`{ kind: "validation", fields }`, `{ kind: "not_found" }`, `{ kind: "network" }`,
-`{ kind: "server" }`) para que cada pantalla decida qué mostrar sin repetir lógica.
+La arquitectura del frontend (cliente de API generado, hooks, formularios) está en
+"Arquitectura del frontend", más abajo.
 
 ### Pantallas y flujos
 
@@ -459,25 +473,196 @@ Dos fixtures JSON con datos ficticios:
 La lógica de arranque vive en un comando de gestión propio (p. ej. `seed_demo`) que también
 crea el superusuario de demo, para que Docker y el modo nativo usen el mismo paso.
 
+### Paquetes
+
+Criterio: cada paquete debe **quitar código propio**, no añadir piezas. Las decisiones
+marcadas "(usuario)" las tomó el usuario; el resto son propuestas de Claude que el usuario
+vio en la lista de paquetes.
+
+**Backend** (Python 3.12+, gestionado con **`uv`**, `pyproject.toml` + `uv.lock`; usuario)
+
+| Paquete | Uso |
+|---|---|
+| `django` 5.x, `djangorestframework` | Framework y API |
+| `django-filter` | `VisitFilter` para `school` y `visit_type` |
+| `psycopg[binary]` 3 | Conector de PostgreSQL |
+| `django-environ` | Configuración por `.env` y `DATABASE_URL` |
+| `drf-spectacular` | Schema OpenAPI y Swagger UI; fuente de los tipos del frontend (usuario) |
+| `pytest`, `pytest-django`, `factory-boy` | Tests y fábricas de datos de prueba |
+| `ruff` (dev) | Revisión de estilo y formato |
+
+Descartado: `django-model-utils`. El borrado lógico es lógica evaluada y cabe en unas
+15 líneas propias y legibles.
+
+**Frontend** (Node 22 LTS, `npm`)
+
+| Paquete | Uso |
+|---|---|
+| `next` ≥ 16.3, `react`, `typescript`, `sass` | Base |
+| `@tanstack/react-query` | Caché del estado del servidor, carga/error, invalidación después de mutar |
+| `react-hook-form`, `zod`, `@hookform/resolvers` | Formulario declarativo y esquema de validación |
+| `openapi-typescript` (dev), `openapi-fetch` | Tipos y cliente generados del schema de Django (usuario) |
+| `nuqs` | Filtros del listado sincronizados con la URL, con tipos |
+| `sonner` | Avisos (toasts) |
+| `@playwright/test` (dev) | Tests E2E (usuario) |
+| ESLint (config de Next), Prettier (dev) | Revisión de estilo y formato |
+
+Descartado: date-fns (basta con `Intl.DateTimeFormat("es-VE")`), Radix u otras librerías de
+componentes (basta con el `<dialog>` nativo), y Redux o Zustand (el único estado global es
+el del servidor, que lleva TanStack Query).
+
+**Repo**: `pre-commit` (ruff, ruff-format, prettier, eslint) y un `Makefile` como punto de
+entrada único: `make up`, `make down`, `make test` (pytest), `make e2e`, `make lint`,
+`make types` (regenera los tipos del frontend desde el schema) y `make seed`.
+
+### Arquitectura del backend (patrones; usuario: services + selectors)
+
+Sigue el **Django Styleguide de HackSoft**: la lógica de negocio no vive ni en vistas ni
+en serializers.
+
+```
+backend/
+  config/                 settings, urls, exception handler
+  common/
+    models.py             TimeStampedModel, SoftDeleteModel (abstractos)
+  visits/
+    models.py             School, Teacher, Visit + VisitQuerySet
+    selectors.py          lecturas
+    services.py           escrituras y reglas de negocio
+    filters.py            VisitFilter (django-filter)
+    serializers.py        Input/Output serializers
+    apis.py               ViewSets: solo traducen HTTP ↔ servicios
+    management/commands/seed_demo.py
+    fixtures/             schools_teachers.json, sample_visits.json
+    tests/                factories.py, test_services.py, test_selectors.py, test_apis.py
+```
+
+Patrones y responsabilidades:
+
+- **Mixins de modelo abstractos** (`common/models.py`): `TimeStampedModel` (`created_at`,
+  `updated_at`) y `SoftDeleteModel` (`is_deleted`, `deleted_at`, `soft_delete()`, y los
+  managers `objects` = activos y `all_objects` = todos). `Visit` hereda de ambos.
+- **Custom QuerySet** (`VisitQuerySet`): `.active()` y `.with_relations()`
+  (`select_related("school", "teacher")`). Encapsula cómo se consulta, sin un Repository
+  encima del ORM.
+- **Selectors** (`selectors.py`), funciones puras de lectura:
+  - `visit_list(*, filters: dict) -> QuerySet[Visit]`: aplica `VisitFilter` sobre
+    `Visit.objects.active().with_relations()`, ordenado por fecha desc y luego
+    `created_at` desc. Un filtro inválido lanza `ValidationError`.
+  - `visit_get(*, visit_id: int) -> Visit`: lanza `Http404` si no existe o está eliminada.
+  - `teacher_list(*, school_id: int | None)`, `school_list()`.
+- **Services** (`services.py`): funciones con argumentos solo por nombre, envueltas en
+  `@transaction.atomic`:
+  - `visit_create(*, school, teacher, visit_date, visit_type, observations) -> Visit`
+  - `visit_update(*, visit, data: dict) -> Visit`: aplica solo los campos recibidos;
+    valida la coherencia colegio-docente **solo si cambian `school` o `teacher`**.
+  - `visit_soft_delete(*, visit) -> None`
+  - Las reglas de negocio viven aquí: fecha no futura y no anterior a 2000-01-01,
+    coherencia colegio-docente y observaciones sin espacios sobrantes. Se aplican en un
+    único helper privado `_validate_visit(...)` que usan crear y editar, y lanzan
+    `django.core.exceptions.ValidationError({"campo": "mensaje"})`.
+- **Serializers de entrada y salida** (`serializers.py`):
+  - `VisitInputSerializer` (`serializers.Serializer`, no `ModelSerializer`): solo forma y
+    tipos (campos requeridos, longitud máxima, `PrimaryKeyRelatedField` para colegio y
+    docente, `ChoiceField` para el tipo). No contiene reglas de negocio.
+  - `VisitOutputSerializer`: IDs más nombres legibles, `visit_type_label`, `created_at` y
+    `updated_at`.
+  - `SchoolSerializer` y `TeacherSerializer`, de solo lectura.
+- **APIs** (`apis.py`): cada acción valida la entrada con el serializer de entrada, llama
+  a un selector o servicio y responde con el serializer de salida. Nada más.
+- **Exception handler propio** (`config/exceptions.py`): traduce el `ValidationError` de
+  Django que lanzan los servicios al formato de DRF (`{campo: [mensajes]}`, 400). Así el
+  frontend recibe un único formato de error venga de donde venga.
+- **Command**: `seed_demo` (datos iniciales y superusuario de demo).
+- **Factory**: `factory-boy` (`SchoolFactory`, `TeacherFactory`, `VisitFactory`) en los tests.
+
+Lo que se descarta a propósito: un Repository sobre el ORM, inyección de dependencias,
+clases de servicio con estado y señales de Django para la lógica de negocio.
+
+### Arquitectura del frontend (patrones)
+
+```
+frontend/
+  app/
+    layout.tsx                 fuente Lexend, Providers, barra flotante, pie, Toaster
+    providers.tsx              QueryClientProvider + NuqsAdapter
+    page.tsx                   Listado (contenedor)
+    visitas/nueva/page.tsx     Crear (contenedor)
+    visitas/[id]/page.tsx      Detalle (contenedor)
+    visitas/[id]/editar/page.tsx
+  components/                  presentacionales, cada uno con su .module.scss
+    NavBar, Footer, VisitTable, VisitFilters, VisitForm, VisitDetail,
+    TypeBadge, ConfirmDialog, EmptyState, ErrorState, NotFound, Button
+  lib/
+    api/schema.d.ts            GENERADO por openapi-typescript (no se edita)
+    api/client.ts              openapi-fetch + normalización de errores
+    api/errors.ts              ApiError y normalizeError()
+    queries/visits.ts          hooks de TanStack Query
+    queries/catalog.ts         useSchools, useTeachers(schoolId)
+    forms/visitSchema.ts       esquema Zod del formulario
+    format.ts                  formateo de fechas con Intl
+  styles/
+    _tokens.scss               tokens de Kurios (colores, radios, sombras, tipografía)
+    globals.scss
+  e2e/                         tests de Playwright
+```
+
+Patrones y responsabilidades:
+
+- **Contrato generado (OpenAPI → TypeScript)**: `make types` descarga `/api/schema/` y
+  ejecuta `openapi-typescript` para generar `lib/api/schema.d.ts`, que se versiona. Ningún
+  tipo de la API se escribe a mano. Si el backend cambia y el frontend no, `tsc` falla.
+- **Adapter / API Gateway** (`lib/api/client.ts`): el único módulo que habla HTTP. Usa
+  `openapi-fetch` con `baseUrl: "/api"`, que el proxy de Next reenvía a Django. Normaliza
+  todo error en `ApiError` con
+  `kind: "validation" | "not_found" | "network" | "server"` y `fields` para los errores de
+  validación.
+- **Custom hooks sobre TanStack Query** (`lib/queries`): `useVisits(filters)`,
+  `useVisit(id)`, `useCreateVisit()`, `useUpdateVisit(id)`, `useDeleteVisit()`,
+  `useSchools()`, `useTeachers(schoolId)`. Las claves de caché salen de una fábrica única
+  (`visitKeys.list(filters)`, `visitKeys.detail(id)`), y cada mutación invalida las claves
+  que afecta. Las páginas nunca llaman a `fetch` ni conocen las claves.
+- **Container / Presentational**: las páginas de `app/` componen hooks, deciden el estado
+  (carga, vacío, error, no encontrada) y pasan datos a componentes presentacionales, que no
+  hacen peticiones y se pueden probar o reutilizar solos. `VisitForm` lo usan tanto crear
+  como editar, y recibe `defaultValues`, `onSubmit` y `serverErrors`.
+- **Esquema como fuente de verdad del formulario** (`visitSchema.ts`): Zod declara los
+  requeridos, la fecha (no futura ni anterior a 2000), las observaciones (sin espacios
+  sobrantes, máximo 5000) y el tipo. React Hook Form lo usa con `zodResolver`. Los errores
+  del servidor se aplican con `setError` campo a campo, y el foco va al primer error.
+- **Estado en la URL** (`nuqs`): `school` y `visit_type` como parámetros de búsqueda con
+  tipos y valores por defecto. Un valor inválido se descarta y se limpia de la URL.
+- **Design tokens** (`_tokens.scss`): todos los valores de Kurios están definidos como
+  variables CSS en un único archivo, y los componentes solo usan esas variables.
+
+Lo que se descarta a propósito: estado global (Redux/Zustand), Server Actions (enfoque
+descartado) y librerías de componentes.
+
 ### Estructura e infraestructura
 
 ```
-backend/        Django project (config/) + app visits/
-frontend/       Next.js app
+backend/        Django (ver Arquitectura del backend), pyproject.toml + uv.lock
+frontend/       Next.js (ver Arquitectura del frontend)
 docker-compose.yml   db (postgres:16) · backend (:8000) · frontend (:3000)
-README.md
+Makefile · .pre-commit-config.yaml · .env.example · README.md
 ```
 
-- `docker compose up` → la app queda en `http://localhost:3000`.
+- `docker compose up` (o `make up`) → la app queda en `http://localhost:3000`, Swagger en
+  `http://localhost:8000/api/docs/` y el admin en `http://localhost:8000/admin/`.
 - El destino del proxy se configura por variable de entorno (`http://backend:8000` dentro
   de Docker, `http://localhost:8000` fuera).
 - Se esperan dos modos de ejecución documentados: con Docker (el principal) y nativo
-  (Postgres + venv + npm) como alternativa.
+  (Postgres + `uv sync` + `npm install`) como alternativa.
 
 ### Pruebas
 
-Tests de backend con `APITestCase` de DRF (los fixtures o el `setUpTestData` crean
-colegios y docentes) para la lógica que importa:
+**Backend** con `pytest` + `pytest-django` + `factory-boy`, organizado por capa:
+- `test_services.py`: las reglas de negocio, probadas directamente sobre los servicios.
+- `test_selectors.py`: filtros y exclusión de las visitas eliminadas.
+- `test_apis.py`: el contrato HTTP (códigos 201/200/204/400/404 y formato de errores) con
+  `APIClient`.
+
+Casos que deben cubrirse:
 - rechazo de fecha futura y aceptación de la fecha de hoy;
 - campos obligatorios ausentes o vacíos;
 - docente que no pertenece al colegio, y edición de una visita histórica cuyo docente
@@ -487,14 +672,27 @@ colegios y docentes) para la lógica que importa:
   registro sigue en la base de datos;
 - filtros por colegio y por tipo.
 
-Frontend: lint + `tsc --noEmit`, sin tests unitarios (se declara en el README).
+**Frontend**: lint + `tsc --noEmit`, sin tests unitarios.
 
-Verificación antes de entregar (no forma parte de la suite entregada):
-- Recorrer los flujos de la UI con Playwright usando el skill `webapp-testing`: crear,
-  filtrar, ver detalle, editar, eliminar, rechazo de fecha futura y error de docente de
-  otro colegio. Antes hay que instalar Playwright (`pip install playwright`).
-- Auditar la interfaz con el skill `web-design-guidelines` cuando el frontend exista, y
-  corregir lo que salga.
+**E2E versionados con `@playwright/test`** (usuario), en `frontend/e2e/`, contra el stack
+levantado con Docker (`make e2e`; Playwright arranca con `webServer` o asume
+`http://localhost:3000`). Flujos:
+1. Registrar una visita válida → aparece en el detalle con el aviso "Visita registrada" y
+   en el listado.
+2. Filtrar por colegio y por tipo → solo se ven las visitas que coinciden; la URL refleja
+   los filtros; "Limpiar filtros" los quita.
+3. Editar una visita → "Cambios guardados" y el detalle muestra el cambio.
+4. Eliminar una visita con confirmación → desaparece del listado; abrir su URL muestra
+   "Esta visita no existe o fue eliminada."
+5. Validaciones: enviar el formulario vacío muestra los errores por campo; una fecha futura
+   muestra el error de fecha; al cambiar de colegio se limpia el docente.
+
+Para que los E2E sean repetibles, cada test crea sus propios datos con nombres únicos
+(observaciones con marca de tiempo) y no depende de las visitas de ejemplo.
+
+**Antes de entregar** (fuera de la suite):
+- Auditar la interfaz con el skill `web-design-guidelines` y corregir lo que salga.
+- Una pasada exploratoria con el skill `webapp-testing` en móvil (375 px) y escritorio.
 
 ### Registro de uso de IA
 
