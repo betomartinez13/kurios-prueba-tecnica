@@ -182,8 +182,9 @@ Mapa de navegación:
 ```
 
 Elementos comunes a todas las pantallas:
-- **Barra superior** con el wordmark de Kurios y el nombre de la herramienta, "Registro de
-  visitas". El wordmark lleva al listado.
+- **Barra superior flotante** (ver Dirección visual) con el símbolo "k" de Kurios, el
+  nombre de la herramienta, "Registro de visitas", y el botón "Registrar visita". El
+  símbolo lleva al listado. En el formulario de creación el botón se oculta.
 - **Avisos** (toast) en la esquina inferior, con `role="status"`, para confirmar acciones:
   "Visita registrada", "Cambios guardados", "Visita eliminada". Desaparecen a los 4 s y se
   pueden cerrar.
@@ -192,10 +193,11 @@ Elementos comunes a todas las pantallas:
 #### 1. Listado (`/`)
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ kurios   Registro de visitas                                     │  ← barra morada
-└──────────────────────────────────────────────────────────────────┘
-  Visitas                                        ( Registrar visita )
+   ╭──────────────────────────────────────────────────────────────╮
+   │ k  Registro de visitas   Visitas            [Registrar visita] │ ← píldora blanca flotante
+   ╰──────────────────────────────────────────────────────────────╯
+  (fondo lavanda #F7F5FB)
+  Visitas                                     ← título morado claro
   14 visitas
 
   Colegio [ Todos los colegios ▾ ]  Tipo [ Todos los tipos ▾ ]  Limpiar filtros
@@ -367,9 +369,27 @@ coherente con el borrado lógico.
 
 El usuario pidió que la app se parezca lo más posible a la web de Kurios. Los valores
 siguientes se tomaron de la hoja de estilos pública de kuriosedu.com
-(`/assets/index-*.css`, revisada el 2026-11-19). La estructura de página de la web no se
-pudo ver (es una SPA renderizada en cliente), así que el layout es una propuesta de Claude
-coherente con esos tokens.
+(`/assets/index-*.css`) y de los estilos computados de la página de inicio y de
+`/schools`, abiertas con Playwright el 2026-11-19 a 1440 px de ancho.
+
+Lo observado en el sitio y que la app replica:
+- **Barra de navegación flotante**: una "píldora" blanca separada de los bordes (unos
+  80 px a cada lado a 1440 px, 28 px desde arriba, 71 px de alto), con fondo
+  `rgba(255,255,255,.85)`, esquinas redondeadas de unos 24 px y sombra
+  `0 10px 30px rgba(31,20,56,.12)`. A la izquierda va el **símbolo "k"** morado (el PNG del
+  logo, de unos 22×30 px); a la derecha, botones compactos. El enlace activo va en
+  `--kurios-morado-claro` y subrayado con una línea de 2 px.
+- **Fondo de página** lavanda `--kurios-cream` #F7F5FB, con contenido en tarjetas blancas.
+- **Títulos de sección** grandes, en peso 500, color `--kurios-morado-claro` #685BC7 e
+  interletrado ligeramente negativo.
+- **Botones** con esquinas de **13 px** (no píldora): primario relleno `--kurios-morado`
+  con texto blanco y peso 500, padding 8–15 px × 16–28 px. Hay un secundario de acento en
+  `--kurios-azul` #00A3E0 y uno blanco con texto morado.
+- **Tarjetas y paneles** blancos con borde 1 px `--kurios-line` #E3DFEC, esquinas de
+  14–20 px y casi sin sombra.
+- **Pie** con degradado morado oscuro (#3A0D8C → #1F0050 aprox.) y textos blancos pequeños.
+- El sitio no tiene tablas ni formularios visibles en esas páginas, así que la tabla y el
+  formulario de la app se diseñan con esos mismos tokens (propuesta de Claude).
 
 - **Color** (tokens del sitio, con sus nombres originales):
   - `--kurios-morado` #330072: barra superior, botón primario, enlaces;
@@ -390,15 +410,27 @@ coherente con esos tokens.
   Google Fonts, cargada con `next/font/google`) en pesos 400 y 500 para todo. No se copia
   ni redistribuye Soho Gothic Pro desde el sitio, por licencia. Escala: 13 / 15 / 18 /
   24 / 32 px (15 y 13 son los tamaños de cuerpo del sitio).
-- **Formas**: botones en píldora (`--radius-pill` 999px), campos con `--radius-md` 8px,
-  contenedor de tabla y detalle con `--radius-card` 20px. Sombra única y suave para el
-  contenedor principal (`--shadow-darker2`); el resto, plano.
-- **Botones**: primario relleno morado con texto blanco; secundario blanco con borde
-  `--kurios-line` y texto ink; peligro rojo. Altura mínima de 44 px.
-- **Barra superior**: fondo `--kurios-morado`, wordmark "kurios" en blanco a la izquierda
-  y "Registro de visitas" en blanco al 80 %. El logo oficial (PNG publicado en el sitio)
-  solo se usa si el usuario lo aprueba (pregunta abierta); si no, wordmark de texto en
-  Lexend 500.
+- **Formas**: botones y campos con esquinas de 13 px como en el sitio; contenedor de la
+  tabla, del detalle y del formulario como tarjeta blanca con borde `--kurios-line` y
+  esquinas de 20 px, casi sin sombra. La única sombra marcada es la de la barra flotante.
+- **Botones**: primario relleno `--kurios-morado` con texto blanco (hover
+  `--kurios-morado-claro`); secundario blanco con texto morado y borde `--kurios-line`;
+  peligro rojo. Altura mínima de 44 px en la app (algo más que los 39 px del sitio, para
+  uso táctil).
+- **Barra superior**: réplica de la barra flotante del sitio: una píldora blanca
+  translúcida con sombra, con el **símbolo "k" oficial de Kurios** a la izquierda
+  (decisión del usuario; es el PNG que publica el sitio en
+  `https://www.kuriosedu.com/media/49001efef4d1.png`, guardado en `frontend/public/` y
+  servido con `next/image`). Le siguen el texto "Registro de visitas" en ink 500 y, como
+  único enlace de navegación, "Visitas" (activo, en morado claro y subrayado). A la
+  derecha, el botón primario "Registrar visita". En móvil la píldora ocupa el ancho con
+  16 px de margen y el botón pasa a ser solo el texto corto "Registrar".
+- **Títulos de página** ("Visitas", "Registrar visita", "Visita del 12 nov 2026") en
+  `--kurios-morado-claro`, peso 500, 32 px e interletrado -0.5 px, como los títulos de
+  sección del sitio pero a escala de herramienta.
+- **Pie** discreto: una franja con el mismo degradado morado del sitio y una sola línea
+  "Kurios Education · Registro de visitas", para que la app se sienta parte de la marca sin
+  ocupar pantalla.
 - **Tono de los textos**: el sitio tutea ("Descubre tu pasión"); la app también tutea
   ("Selecciona un colegio", "Escribe las observaciones").
 - **Calidad base**: foco visible (anillo de 2 px en `--kurios-morado-claro`), `<label>`
