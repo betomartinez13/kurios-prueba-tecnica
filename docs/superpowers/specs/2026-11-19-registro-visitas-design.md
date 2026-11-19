@@ -53,7 +53,10 @@ bien, que una grande e incompleta"*. Cada decisión de este documento se mide co
 
 ## Restricciones
 
-- Backend: Python + Django + Django REST Framework, base de datos PostgreSQL.
+- Backend: Python 3.13 + Django 5.2 LTS + Django REST Framework, base de datos
+  PostgreSQL 17. Django 5.2 por ser LTS (soporte hasta 2028) y compatible con seguridad
+  con DRF y drf-spectacular.
+- Node 24 LTS para el frontend. Versiones fijadas en `.python-version` y `.nvmrc`.
 - Frontend: Next.js (elegido por el usuario) con TypeScript y SASS, que es el stack
   "deseable" del perfil.
 - Ejecución local con `docker compose up` (Docker ya disponible en la máquina del autor).
@@ -102,11 +105,15 @@ Otras decisiones con alternativas, todas tomadas por el usuario:
   - `visit_date` (`DateField`)
   - `visit_type` (`TextChoices`: `CLASSROOM` = "Visita en aula", `MEETING` = "Encuentro")
   - `observations` (`TextField`, obligatorio y no vacío)
-  - `is_deleted` (bool, por defecto False), `deleted_at` (datetime, nulo)
+  - `deleted_at` (datetime, nulo): **único campo del borrado lógico**. `NULL` = activa.
+    No hay un `is_deleted` aparte, porque dos campos pueden contradecirse (decisión de
+    Claude, aceptada por el usuario). `is_deleted` existe solo como propiedad derivada.
   - `created_at`, `updated_at`
-  - `Meta.indexes`: `(is_deleted, visit_date)` para el listado ordenado, y `(is_deleted,
-    school, visit_type)` para los filtros. Con este volumen apenas importan, pero
-    documentan los patrones de consulta.
+  - `Meta.indexes`: **índices parciales de PostgreSQL** solo sobre las visitas activas
+    (`condition=Q(deleted_at__isnull=True)`): uno en `(visit_date, created_at)` para el
+    listado ordenado y otro en `(school, visit_type)` para los filtros. Las visitas
+    eliminadas no ocupan índice. Con este volumen apenas importan, pero documentan los
+    patrones de consulta.
 - Todos los modelos definen `__str__` legible, que es lo que se ve en el admin y en los
   mensajes de error.
 
@@ -121,13 +128,14 @@ observaciones con solo espacios cuentan como vacías.
 
 ### Borrado lógico
 
-- Manager por defecto `Visit.objects` → solo visitas con `is_deleted=False`.
+- Manager por defecto `Visit.objects` → solo visitas con `deleted_at IS NULL`.
   `Visit.all_objects` → todas (para auditoría, admin y tests).
-- `DELETE /api/visits/{id}/` pone `is_deleted=True` y `deleted_at=now()`, y responde 204.
+- `DELETE /api/visits/{id}/` pone `deleted_at=now()` y responde 204.
 - Una visita eliminada responde 404 en GET, PUT, PATCH y DELETE, y no aparece en el listado.
-- El admin de Django (`/admin`) queda disponible y muestra todas las visitas con su estado
-  `is_deleted` (su queryset usa `Visit.all_objects`). Así un evaluador puede comprobar que
-  el registro sigue existiendo.
+- El admin de Django (`/admin`) queda disponible y muestra todas las visitas (su queryset
+  usa `Visit.all_objects`), con una columna sí/no "Eliminada", un filtro "Activas /
+  Eliminadas" y una acción **"Restaurar visitas seleccionadas"** que pone `deleted_at` en
+  `NULL`. Así un evaluador puede comprobar que el registro sigue existiendo y recuperarlo.
 - **Acceso al admin (decisión de Claude):** al arrancar el backend se crea, si no existe,
   un superusuario de demo con usuario y contraseña tomados de variables de entorno (con
   valores por defecto en `.env.example`). El README los indica. En el modo nativo, el
@@ -135,8 +143,9 @@ observaciones con solo espacios cuentan como vacías.
 
 ### Validación de fecha
 
-- En el serializer: `visit_date <= timezone.localdate()`. Si es posterior, responde 400 con
-  un mensaje en español.
+- En la capa de servicios (`_validate_visit`, ver diseño del backend):
+  `visit_date <= timezone.localdate()`. Si es posterior, responde 400 con un mensaje en
+  español en el campo `visit_date`.
 - `TIME_ZONE` se configura por variable de entorno, con `America/Caracas` como valor por
   defecto. Motivo (decisión de Claude): kuriosedu.com declara que trabaja con colegios de
   Venezuela (`og:locale es_VE`). En el frontend, el input de fecha usa `max` = hoy en la
@@ -216,7 +225,10 @@ Elementos comunes a todas las pantallas:
   (`/?school=2&visit_type=MEETING`). Recargar la página o compartir el enlace conserva los
   filtros. "Limpiar filtros" solo aparece cuando hay alguno activo.
 - El contador ("14 visitas", "1 visita") refleja lo filtrado.
-- Cada fila entera es un enlace al detalle, accesible con teclado.
+- Cada fila lleva al detalle. Para no romper la semántica de tabla, el enlace real va en
+  la celda de la fecha y una regla CSS lo estira sobre toda la fila (patrón *stretched
+  link*): se puede hacer clic en cualquier parte, el lector de pantalla anuncia un solo
+  enlace por fila ("12 nov 2026, ver visita") y la tecla Tab recorre una fila cada vez.
 - Estados:
   - **Cargando**: 3 filas fantasma con la forma de la tabla (sin spinner a pantalla completa).
   - **Vacío sin filtros**: "Todavía no hay visitas registradas." + "Registrar visita".
@@ -325,7 +337,10 @@ coherente con el borrado lógico.
 - Colegio o docente inexistente (ID que no existe): 400 con el error estándar de DRF en ese
   campo, traducido ("El colegio seleccionado no existe.").
 - **Editar una visita antigua cuyo docente cambió de colegio:** la coherencia
-  colegio-docente **solo se valida si en esa edición cambia `school` o `teacher`**. Si
+  colegio-docente **solo se valida si en esa edición cambia `school` o `teacher`**.
+  "Cambia" significa que **el valor recibido es distinto del guardado**, no que el campo
+  venga en la petición: el frontend siempre envía la visita completa (PUT), así que
+  comparar por presencia haría que la regla nunca aplicara. Si
   solo se corrigen las observaciones o la fecha, la visita histórica se puede guardar
   aunque el docente ya esté en otro colegio. En el formulario de edición, el select de
   docente incluye siempre al docente actual de la visita aunque ya no figure en la lista
@@ -352,8 +367,8 @@ coherente con el borrado lógico.
 - Eliminar una visita ya eliminada, o editarla desde otra pestaña después de eliminarla:
   404, y el frontend muestra la pantalla "no encontrada".
 - Eliminar no toca `updated_at` de forma visible en la UI; queda en `deleted_at`.
-- No hay "deshacer" en la UI; se puede restaurar desde el admin poniendo `is_deleted` en
-  falso (documentado en el README).
+- No hay "deshacer" en la UI; se restaura desde el admin con la acción "Restaurar visitas
+  seleccionadas" (documentado en el README).
 
 **Filtros**
 - `school` y `visit_type` se combinan con Y (AND).
@@ -366,8 +381,19 @@ coherente con el borrado lógico.
   optimista; anotado como mejora).
 
 **Mensajes de error**
-- Todos los mensajes de validación de la API están en español (`LANGUAGE_CODE = "es"` más
-  mensajes propios en el serializer), para que el frontend los muestre tal cual.
+- Todos los mensajes de validación de la API están en español, para que el frontend los
+  muestre tal cual. Los mensajes de forma (campo requerido, ID inexistente, opción
+  inválida) salen de DRF/Django traducidos con `LANGUAGE_CODE = "es"`, o se fijan en el
+  serializer de entrada cuando el texto por defecto no sirve. Los mensajes de reglas de
+  negocio (fecha, coherencia colegio-docente, observaciones vacías) los define la capa de
+  servicios.
+
+**Validación duplicada en el frontend (asumida a propósito)**
+- El esquema Zod del formulario repite algunas reglas del backend (requeridos, fecha no
+  futura ni anterior a 2000, longitud de las observaciones). Es **solo ayuda de UX**, para
+  dar respuesta inmediata sin ida y vuelta al servidor. La autoridad es el backend: si
+  difieren (p. ej. por zona horaria), gana el error del servidor, que se muestra en el
+  campo. Los E2E comprueban que los errores del servidor se pintan.
 
 ### Estructura e infraestructura
 
@@ -376,8 +402,9 @@ prueba-tecnica/
   backend/      proyecto uv (pyproject.toml, uv.lock) + Dockerfile — ver diseño del backend
   frontend/     proyecto npm (package.json, package-lock.json) + Dockerfile — ver diseño del frontend
   docs/         specs, plan, ai-log.md
-  docker-compose.yml   db (postgres:16) · backend (:8000) · frontend (:3000)
-  Makefile · .pre-commit-config.yaml · .env.example · README.md
+  .github/workflows/ci.yml
+  docker-compose.yml   db (postgres:17) · backend (:8000) · frontend (:3000)
+  Makefile · .pre-commit-config.yaml · .env.example · .python-version · .nvmrc · README.md
 ```
 
 **Un solo repo, dos apps, sin herramientas de monorepo** (decisión de Claude, aceptada
@@ -391,16 +418,90 @@ por el usuario):
   Dockerfile. Cualquiera de las dos carpetas podría pasar a su propio repo sin desenredar
   nada.
 - El `Makefile` de la raíz es el punto de entrada único: `make up`, `make down`,
-  `make test` (pytest), `make e2e`, `make lint`, `make types` (regenera los tipos del
-  frontend desde el schema) y `make seed`. `pre-commit` ejecuta ruff, ruff-format,
+  `make reset` (borra también los datos), `make test` (pytest), `make e2e`, `make lint`,
+  `make types` (regenera el schema y los tipos del frontend) y `make seed`. `pre-commit` ejecuta ruff, ruff-format,
   prettier y eslint.
 
 - `docker compose up` (o `make up`) → la app queda en `http://localhost:3000`, Swagger en
   `http://localhost:8000/api/docs/` y el admin en `http://localhost:8000/admin/`.
-- El destino del proxy se configura por variable de entorno (`http://backend:8000` dentro
-  de Docker, `http://localhost:8000` fuera).
 - Se esperan dos modos de ejecución documentados: con Docker (el principal) y nativo
   (Postgres + `uv sync` + `npm install`) como alternativa.
+
+**Arranque fiable con Docker** (anti-objetivo: que el evaluador no consiga levantarlo):
+- `db` tiene un `healthcheck` (`pg_isready`). `backend` depende de él con
+  `condition: service_healthy`, así que nunca migra antes de que Postgres acepte
+  conexiones. `backend` tiene su propio healthcheck (GET a `/api/schools/`) y `frontend`
+  depende de él.
+- `backend` arranca con `migrate` → `seed_demo` → `runserver 0.0.0.0:8000`. Se usa
+  `runserver` (no gunicorn) porque es un entorno de demo local y así Django sirve los
+  estáticos del admin y de Swagger sin añadir whitenoise.
+- `frontend` se construye con `next build` y corre con `next start`. El destino del
+  proxy, `BACKEND_URL`, se pasa **como argumento de build**
+  (`args: BACKEND_URL: http://backend:8000`), porque Next fija los `rewrites` al compilar.
+  En modo nativo, `BACKEND_URL` por defecto es `http://localhost:8000`.
+- El volumen de Postgres es con nombre, para que los datos sobrevivan a `docker compose
+  down` y se borren solo con `make reset` (`down -v`).
+
+**Seguridad mínima para que la demo no falle**:
+- `ALLOWED_HOSTS` incluye `localhost`, `127.0.0.1` y `backend` (el host con el que llegan
+  las peticiones que reenvía el proxy de Next dentro de Docker).
+- La API **no tiene clases de autenticación** (`DEFAULT_AUTHENTICATION_CLASSES = []`). Si
+  no fuera así, al iniciar sesión en `/admin` (en `localhost:8000`) la cookie de sesión
+  también viajaría a `localhost:3000/api`, porque las cookies se comparten por host y no
+  por puerto. DRF trataría la petición como autenticada, exigiría token CSRF y todos los
+  guardados y borrados devolverían 403. El admin conserva su propio login de sesión.
+
+**Contrato OpenAPI sin servidor en marcha**:
+- `make types` ejecuta `manage.py spectacular --file schema.yml` (no necesita la app
+  levantada), copia el resultado como `backend/schema.yml` (versionado) y luego
+  `openapi-typescript` genera `frontend/lib/api/schema.d.ts` (también versionado).
+- La CI regenera ambos y falla si difieren de lo versionado: el contrato no se puede
+  desincronizar sin que se note.
+
+### Integración continua (GitHub Actions)
+
+`.github/workflows/ci.yml`, en cada push y PR, con dos jobs en paralelo:
+- **backend**: `uv sync`, `ruff check`, `ruff format --check` y `pytest` contra un
+  servicio `postgres:17` del propio job.
+- **frontend**: `npm ci`, `eslint`, `prettier --check`, `tsc --noEmit` y la comprobación
+  de que `schema.yml` y `schema.d.ts` están al día.
+- Los E2E **no** corren en la CI en esta iteración (necesitan levantar el stack completo).
+  Se ejecutan en local con `make e2e` y se anotan como mejora.
+- El README muestra el badge de estado de la CI.
+
+### README (estructura obligatoria)
+
+1. Qué es (dos líneas) y una captura de pantalla del listado.
+2. Cómo ejecutarlo: requisitos (Docker); `make up`; URLs de la app, Swagger y admin;
+   credenciales del admin de demo; cómo correr tests (`make test`, `make e2e`); modo
+   nativo como alternativa.
+3. Decisiones técnicas y por qué: un resumen de los enfoques elegidos, con enlace a los
+   documentos de diseño.
+4. Qué quedó fuera por falta de tiempo.
+5. Qué mejoraría en una siguiente iteración (autenticación, paginación, E2E en CI, aviso
+   de duplicados, bloqueo optimista, confirmación por cambios sin guardar, deshacer
+   borrado en la UI).
+6. **«Uso de inteligencia artificial»**: herramientas, en qué partes se usaron y qué se
+   corrigió, redactado desde `docs/ai-log.md` y revisado por el autor.
+
+### Prioridades y líneas de corte
+
+Si el tiempo aprieta, se construye en este orden y se corta desde abajo. Nada de un nivel
+empieza hasta que el anterior funciona de punta a punta.
+
+- **Imprescindible** (sin esto no hay entrega): modelos, servicios, selectors y API con
+  sus tests; seed; docker-compose con healthchecks; las cuatro pantallas con sus estados
+  básicos; README con las seis secciones.
+- **Debería**: tipos generados desde OpenAPI; dirección visual de Kurios completa; avisos;
+  CI; E2E flujos 1 y 4.
+- **Podría**: E2E flujos 2, 3 y 5; acción de restaurar en el admin; pie con degradado;
+  pre-commit; auditoría con `web-design-guidelines`.
+
+### Commits
+
+Commits convencionales (`feat:`, `fix:`, `test:`, `docs:`, `chore:`), uno o pocos por
+tarea del plan, en español y en presente ("feat: añadir servicio de borrado lógico"). El
+historial es parte de lo que el evaluador lee.
 
 ### Pruebas
 
@@ -422,9 +523,11 @@ Casos que deben cubrirse:
 
 **Frontend**: lint + `tsc --noEmit`, sin tests unitarios.
 
-**E2E versionados con `@playwright/test`** (usuario), en `frontend/e2e/`, contra el stack
-levantado con Docker (`make e2e`; Playwright arranca con `webServer` o asume
-`http://localhost:3000`). Flujos:
+**E2E versionados con `@playwright/test`** (usuario), en `frontend/e2e/`. `make e2e`
+levanta **una copia aislada del stack** (`docker compose -p e2e`, con su propio volumen de
+base de datos y puertos alternativos, p. ej. 3100/8100), espera a los healthchecks,
+ejecuta Playwright contra ella y la destruye al terminar (`down -v`). Así los tests nunca
+ensucian los datos de la demo del evaluador. Flujos:
 1. Registrar una visita válida → aparece en el detalle con el aviso "Visita registrada" y
    en el listado.
 2. Filtrar por colegio y por tipo → solo se ven las visitas que coinciden; la URL refleja
@@ -459,6 +562,7 @@ paso de revisión antes del lunes 23 a las 12:00.
 - Nombres internos, organización de componentes y versiones exactas de dependencias
   (estables y actuales).
 - Contenido ficticio del fixture.
-- Detalles del proxy: barras finales frente a `APPEND_SLASH`, y si la variable del destino
-  hace falta al compilar o solo al ejecutar.
+- Detalles del proxy: barras finales frente a `APPEND_SLASH`.
+- Versiones exactas de parche. Si al instalar Next 16.3 no existe, usar la última estable
+  de Next 16 y anotarlo en la bitácora.
 

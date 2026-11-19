@@ -10,9 +10,13 @@ Complementa a [`2026-11-19-registro-visitas-design.md`](2026-11-19-registro-visi
   no debe vivir en `perform_create`/`perform_update`. Colegios y docentes son
   `ReadOnlyModelViewSet` sencillos: no tienen lógica de negocio.
 - `destroy` llama a `visit_soft_delete()` y nunca a `instance.delete()`.
-- Permisos: `AllowAny` declarado **explícitamente** en settings de DRF, con un comentario
-  de que la app no tiene autenticación por alcance. Se anota en el README como lo primero
-  a añadir en una siguiente iteración.
+- Permisos y autenticación: `DEFAULT_PERMISSION_CLASSES = [AllowAny]` y
+  `DEFAULT_AUTHENTICATION_CLASSES = []`, declarados **explícitamente** en settings de DRF
+  con un comentario que explica las dos cosas: no hay autenticación por alcance, y sin
+  clases de autenticación se evita que la cookie de sesión del admin active el CSRF de DRF
+  y bloquee los guardados (ver "Seguridad mínima" en el documento principal). Se anota en
+  el README como lo primero a añadir en una siguiente iteración.
+- `ALLOWED_HOSTS` desde el entorno, por defecto `localhost,127.0.0.1,backend`.
 - Esquema OpenAPI generado con `drf-spectacular` (`/api/schema/`) y Swagger UI en
   `/api/docs/`. Las vistas se anotan con `@extend_schema` (serializers de entrada y
   salida, filtros, respuestas 400/404) para que el schema sea exacto, porque de él se
@@ -23,11 +27,11 @@ Complementa a [`2026-11-19-registro-visitas-design.md`](2026-11-19-registro-visi
 
 ## Paquetes
 
-**Backend** (Python 3.12+, gestionado con **`uv`**, `pyproject.toml` + `uv.lock`; usuario)
+**Backend** (Python 3.13, gestionado con **`uv`**, `pyproject.toml` + `uv.lock`; usuario)
 
 | Paquete | Uso |
 |---|---|
-| `django` 5.x, `djangorestframework` | Framework y API |
+| `django` 5.2 LTS, `djangorestframework` | Framework y API |
 | `django-filter` | `VisitFilter` para `school` y `visit_type` |
 | `psycopg[binary]` 3 | Conector de PostgreSQL |
 | `django-environ` | Configuración por `.env` y `DATABASE_URL` |
@@ -63,8 +67,12 @@ backend/
 Patrones y responsabilidades:
 
 - **Mixins de modelo abstractos** (`common/models.py`): `TimeStampedModel` (`created_at`,
-  `updated_at`) y `SoftDeleteModel` (`is_deleted`, `deleted_at`, `soft_delete()`, y los
-  managers `objects` = activos y `all_objects` = todos). `Visit` hereda de ambos.
+  `updated_at`) y `SoftDeleteModel` (`deleted_at` como único campo, la propiedad
+  `is_deleted`, `soft_delete()` y `restore()`, y los managers `objects` = activos y
+  `all_objects` = todos). `Visit` hereda de ambos.
+- **Admin** (`visits/admin.py`): `VisitAdmin.get_queryset` usa `all_objects`. Incluye la
+  columna booleana "Eliminada", el filtro "Activas / Eliminadas" y la acción "Restaurar
+  visitas seleccionadas", que llama a `restore()`.
 - **Custom QuerySet** (`VisitQuerySet`): `.active()` y `.with_relations()`
   (`select_related("school", "teacher")`). Encapsula cómo se consulta, sin un Repository
   encima del ORM.
@@ -78,7 +86,8 @@ Patrones y responsabilidades:
   `@transaction.atomic`:
   - `visit_create(*, school, teacher, visit_date, visit_type, observations) -> Visit`
   - `visit_update(*, visit, data: dict) -> Visit`: aplica solo los campos recibidos;
-    valida la coherencia colegio-docente **solo si cambian `school` o `teacher`**.
+    valida la coherencia colegio-docente **solo si `school` o `teacher` llegan con un
+    valor distinto del guardado** (comparando con la instancia, no por presencia).
   - `visit_soft_delete(*, visit) -> None`
   - Las reglas de negocio viven aquí: fecha no futura y no anterior a 2000-01-01,
     coherencia colegio-docente y observaciones sin espacios sobrantes. Se aplican en un

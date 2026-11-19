@@ -38,7 +38,7 @@ no existe), y el implementador debe seguirlas.
 
 ## Paquetes
 
-**Frontend** (Node 22 LTS, `npm`)
+**Frontend** (Node 24 LTS, `npm`)
 
 | Paquete | Uso |
 |---|---|
@@ -87,8 +87,10 @@ frontend/
 
 Patrones y responsabilidades:
 
-- **Contrato generado (OpenAPI → TypeScript)**: `make types` descarga `/api/schema/` y
-  ejecuta `openapi-typescript` para generar `lib/api/schema.d.ts`, que se versiona. Ningún
+- **Contrato generado (OpenAPI → TypeScript)**: `make types` genera `backend/schema.yml`
+  con `manage.py spectacular`, sin servidor en marcha, y ejecuta `openapi-typescript` sobre
+  él para generar `lib/api/schema.d.ts`. Ambos archivos se versionan y la CI comprueba
+  que están al día. Ningún
   tipo de la API se escribe a mano. Si el backend cambia y el frontend no, `tsc` falla.
 - **Adapter / API Gateway** (`lib/api/client.ts`): el único módulo que habla HTTP. Usa
   `openapi-fetch` con `baseUrl: "/api"`, que el proxy de Next reenvía a Django. Normaliza
@@ -107,7 +109,9 @@ Patrones y responsabilidades:
 - **Esquema como fuente de verdad del formulario** (`visitSchema.ts`): Zod declara los
   requeridos, la fecha (no futura ni anterior a 2000), las observaciones (sin espacios
   sobrantes, máximo 5000) y el tipo. React Hook Form lo usa con `zodResolver`. Los errores
-  del servidor se aplican con `setError` campo a campo, y el foco va al primer error.
+  del servidor se aplican con `setError` campo a campo, y el foco va al primer error. Estas
+  reglas duplican a propósito algunas del backend, solo como ayuda de UX: la autoridad es
+  el servidor (ver "Validación duplicada" en el documento principal).
 - **Estado en la URL** (`nuqs`): `school` y `visit_type` como parámetros de búsqueda con
   tipos y valores por defecto. Un valor inválido se descarta y se limpia de la URL.
 - **Design tokens** (`_tokens.scss`): todos los valores de Kurios están definidos como
