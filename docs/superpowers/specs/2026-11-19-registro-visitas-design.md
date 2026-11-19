@@ -80,6 +80,11 @@ Para el stack de frontend se consideró también HTML + JS sin framework; el usu
   - `observations` (`TextField`, obligatorio y no vacío)
   - `is_deleted` (bool, por defecto False), `deleted_at` (datetime, nulo)
   - `created_at`, `updated_at`
+  - `Meta.indexes`: `(is_deleted, visit_date)` para el listado ordenado, y `(is_deleted,
+    school, visit_type)` para los filtros. Con este volumen apenas importan, pero
+    documentan los patrones de consulta.
+- Todos los modelos definen `__str__` legible, que es lo que se ve en el admin y en los
+  mensajes de error.
 
 **Decisión de diseño (Claude):** `Visit` guarda `school` y `teacher` aunque el colegio se
 pueda deducir del docente. Si un docente cambia de colegio más adelante, la visita
@@ -126,12 +131,31 @@ observaciones con solo espacios cuentan como vacías.
 
 - Las respuestas de visita incluyen los IDs y también los nombres legibles (`school_name`,
   `teacher_name`, `visit_type_label`), para que el frontend no tenga que cruzar datos.
-- Filtros con `django-filter`.
+- Filtros con `django-filter` (`FilterSet` con `school` y `visit_type`). Un valor de tipo
+  inválido responde 400; nunca devuelve en silencio una lista vacía.
+- `VisitViewSet` (`ModelViewSet`) con `select_related("school", "teacher")` en el
+  queryset, para evitar consultas N+1 al serializar los nombres. Colegios y docentes
+  son `ReadOnlyModelViewSet`.
+- `destroy()` se sobrescribe para hacer el borrado lógico (un método `soft_delete()` en el
+  modelo) en vez de `instance.delete()`.
+- Permisos: `AllowAny` declarado **explícitamente** en settings de DRF, con un comentario
+  de que la app no tiene autenticación por alcance. Se anota en el README como lo primero
+  a añadir en una siguiente iteración.
+- La validación de coherencia colegio-docente va en `VisitSerializer.validate()` (a nivel
+  de objeto) y el error se asigna al campo `teacher`, para que el frontend lo pinte junto
+  al select de docente.
+- Configuración por variables de entorno (`SECRET_KEY`, `DEBUG`, `DATABASE_URL` o sus
+  partes, `TIME_ZONE`, credenciales del superusuario de demo), con un `.env.example`
+  versionado. Ningún secreto queda en `settings.py`.
 - Sin paginación (fuera de alcance; se menciona como mejora).
 - Los errores siguen el formato estándar de DRF (`{campo: [mensajes]}`), y el frontend los
   muestra junto a cada campo.
 
-### Frontend (Next.js App Router, TypeScript, SASS modules)
+### Frontend (Next.js 16.3 o superior, App Router, TypeScript, SASS modules)
+
+Se fija Next.js 16.3+ porque desde esa versión `next dev` genera `AGENTS.md`/`CLAUDE.md`
+con las buenas prácticas oficiales de Vercel (el antiguo skill `next-best-practices` ya
+no existe), y el implementador debe seguirlas.
 
 Páginas:
 - `/` → listado de visitas con dos selects de filtro (colegio, tipo) sincronizados con la
@@ -147,6 +171,53 @@ futura) y los errores del backend se muestran por campo.
 
 Una pequeña capa `lib/api.ts` con funciones tipadas (`listVisits`, `getVisit`, `createVisit`, …)
 y tipos compartidos en `lib/types.ts`.
+
+### Dirección visual (propuesta de Claude, con el skill frontend-design)
+
+Tema: la **planilla de campo** de una especialista. Es una herramienta de trabajo que se
+consulta y se llena varias veces por semana, así que la prioridad es leer rápido y no
+equivocarse al registrar. Sobria, sin librerías de componentes y sin animaciones
+decorativas.
+
+- **Color** (5 tokens en variables SASS/CSS):
+  - `tinta` #1E3448 (texto y acciones principales, un azul pizarra);
+  - `papel` #FFFFFF (superficie);
+  - `fondo` #EEF1F3 (lienzo gris frío, no crema);
+  - `aula` #2F6B4F (verde) y `encuentro` #8A4B9B (ciruela): son el único color con
+    significado y distinguen el tipo de visita de un vistazo en el listado;
+  - `error` #B3261E.
+  El contraste de texto es AA como mínimo.
+- **Tipografía**: una sola familia, *Atkinson Hyperlegible*, diseñada para máxima
+  legibilidad y coherente con un contexto educativo. Cargada con `next/font`. Escala corta:
+  14 / 16 / 20 / 28 px. Etiquetas en minúscula normal, sin versalitas ni mayúsculas.
+- **Layout**: columna centrada de unos 960 px de ancho máximo, texto alineado a la izquierda.
+  El listado es una **tabla** (fecha · colegio · docente · tipo), no tarjetas, porque son
+  datos para comparar en filas. Por debajo de unos 640 px cada fila se apila en un bloque
+  de dos líneas.
+
+  ```
+  Visitas registradas                       [ Registrar visita ]
+  Colegio [ Todos ▾ ]   Tipo [ Todos ▾ ]    Limpiar filtros
+  ─────────────────────────────────────────────────────────────
+  12 nov 2026   Colegio Los Robles   Ana Pérez     ● Visita en aula
+  05 nov 2026   Colegio El Prado     Luis Gómez    ● Encuentro
+  ```
+  Cada fila entera es un enlace al detalle. El detalle muestra los campos como una lista
+  de definiciones, y las observaciones con su formato de párrafos.
+- **Lo memorable**: la marca de color por tipo de visita. Todo lo demás se mantiene quieto.
+- **Calidad base**: foco de teclado visible, `<label>` asociado a cada campo, errores
+  enlazados con `aria-describedby`, respeto de `prefers-reduced-motion` y funcionamiento
+  correcto en móvil.
+
+**Textos** (en español, en voz activa y diciendo lo que hacen):
+- Botones: "Registrar visita", "Guardar cambios", "Editar", "Eliminar visita", "Cancelar".
+- La confirmación del borrado dice qué pasa: "¿Eliminar esta visita? Dejará de aparecer
+  en el listado."
+- Estado vacío: "Todavía no hay visitas registradas." con el botón "Registrar visita".
+  Con filtros activos: "No hay visitas que coincidan con estos filtros." con "Limpiar filtros".
+- Error de red: "No se pudo conectar con el servidor. Revisa que el backend esté en marcha
+  y vuelve a intentarlo." con un botón "Reintentar".
+- Fecha futura: "La fecha de la visita no puede ser posterior a hoy."
 
 ### Datos iniciales
 
@@ -179,7 +250,8 @@ README.md
 
 ### Pruebas
 
-Tests de backend (Django TestCase o pytest-django) para la lógica que importa:
+Tests de backend con `APITestCase` de DRF (los fixtures o el `setUpTestData` crean
+colegios y docentes) para la lógica que importa:
 - rechazo de fecha futura y aceptación de la fecha de hoy;
 - campos obligatorios ausentes o vacíos;
 - docente que no pertenece al colegio;
@@ -188,6 +260,13 @@ Tests de backend (Django TestCase o pytest-django) para la lógica que importa:
 - filtros por colegio y por tipo.
 
 Frontend: lint + `tsc --noEmit`, sin tests unitarios (se declara en el README).
+
+Verificación antes de entregar (no forma parte de la suite entregada):
+- Recorrer los flujos de la UI con Playwright usando el skill `webapp-testing`: crear,
+  filtrar, ver detalle, editar, eliminar, rechazo de fecha futura y error de docente de
+  otro colegio. Antes hay que instalar Playwright (`pip install playwright`).
+- Auditar la interfaz con el skill `web-design-guidelines` cuando el frontend exista, y
+  corregir lo que salga.
 
 ### Registro de uso de IA
 
@@ -200,10 +279,9 @@ paso de revisión antes del lunes 23 a las 12:00.
 
 ## Queda a criterio del implementador
 
-- Diseño visual concreto (sobrio y legible; sin librerías de componentes pesadas).
+- Ajustes finos del diseño visual dentro de la dirección descrita arriba.
 - Nombres internos, organización de componentes y versiones exactas de dependencias
   (estables y actuales).
-- Elegir entre pytest-django y el test runner de Django.
 - Contenido ficticio del fixture.
 - Detalles del proxy: barras finales frente a `APPEND_SLASH`, y si la variable del destino
   hace falta al compilar o solo al ejecutar.
