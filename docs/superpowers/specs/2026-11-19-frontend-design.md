@@ -29,8 +29,12 @@ no existe), y el implementador debe seguirlas.
   incluya los que se usan: flecha de volver, chevrons, icono de error junto a los mensajes,
   cerrar en los avisos. Con `aria-hidden` cuando acompañan a un texto.
 - **Por qué no Tailwind**: el perfil del puesto pide CSS y SASS, así que SASS demuestra
-  esa habilidad. Además, Kurios ya usa variables CSS, y sus tokens se copian 1:1 de forma
-  más natural. CSS-in-JS se descarta porque choca con los Server Components.
+  esa habilidad. Además, kuriosedu.com **no usa Tailwind**: es una SPA de React compilada
+  con Vite que usa **CSS Modules** (clases con hash como `._card_2yxgc`) sobre tokens de
+  **variables CSS** (`--kurios-*`). Es el mismo enfoque que elegimos, así que sus tokens se
+  copian 1:1. Hay variables de Bootstrap, pero solo dentro de un par de landings
+  (`.k-lg-imagina`, `.k-lg-impulso`) y no como sistema global. Revisado el 2026-11-19 en el
+  CSS y el bundle JS públicos. CSS-in-JS se descarta porque choca con los Server Components.
 
 ## Paquetes
 
