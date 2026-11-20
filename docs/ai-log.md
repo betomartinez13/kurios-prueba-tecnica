@@ -26,3 +26,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: serializers de entrada y salida con mensajes en español, `VisitViewSet`, `SchoolViewSet` y `TeacherViewSet`, rutas y documentación (`/api/schema/`, `/api/docs/`), el manejador de errores que traduce `ValidationError` de Django al formato de DRF, `backend/schema.yml` generado con drf-spectacular y los tests de la API.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 6 — Datos iniciales y comando `seed_demo` (2026-11-19)
+- Generado por IA: fixtures de colegios, docentes y seis visitas de ejemplo (ficticias, con observaciones en español y fechas de octubre y noviembre de 2026), el comando `seed_demo` idempotente (las visitas solo se cargan si `Visit.all_objects` está vacío; el superusuario sale de las variables de entorno y se omite con aviso si faltan) y sus tests.
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna

@@ -1,0 +1,86 @@
+[
+  {
+    "model": "visits.visit",
+    "pk": 1,
+    "fields": {
+      "school": 1,
+      "teacher": 1,
+      "visit_date": "2026-10-06",
+      "visit_type": "CLASSROOM",
+      "observations": "Se observó la clase de matemática de 3.er grado. La docente inicia con una actividad de cálculo mental que engancha al grupo.\nSugerencia: dejar más tiempo para que los estudiantes expliquen su procedimiento antes de dar la respuesta correcta.",
+      "created_at": "2026-10-06T14:00:00Z",
+      "updated_at": "2026-10-06T14:00:00Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "visits.visit",
+    "pk": 2,
+    "fields": {
+      "school": 1,
+      "teacher": 2,
+      "visit_date": "2026-10-13",
+      "visit_type": "MEETING",
+      "observations": "Reunión de acompañamiento sobre la planificación del segundo lapso. Acordamos incorporar una rúbrica sencilla para las exposiciones orales.\nPróxima revisión en dos semanas.",
+      "created_at": "2026-10-13T14:00:00Z",
+      "updated_at": "2026-10-13T14:00:00Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "visits.visit",
+    "pk": 3,
+    "fields": {
+      "school": 2,
+      "teacher": 4,
+      "visit_date": "2026-10-20",
+      "visit_type": "CLASSROOM",
+      "observations": "Clase de lectura en 5.º grado con buen manejo del tiempo. Los estudiantes trabajan en parejas y el docente circula entre los grupos.\nPendiente reforzar las preguntas de inferencia.",
+      "created_at": "2026-10-20T14:00:00Z",
+      "updated_at": "2026-10-20T14:00:00Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "visits.visit",
+    "pk": 4,
+    "fields": {
+      "school": 2,
+      "teacher": 5,
+      "visit_date": "2026-10-27",
+      "visit_type": "MEETING",
+      "observations": "Conversamos sobre las dificultades de asistencia en el grupo de 4.º grado y cómo comunicarlas a las familias. La docente propone un registro semanal compartido.",
+      "created_at": "2026-10-27T14:00:00Z",
+      "updated_at": "2026-10-27T14:00:00Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "visits.visit",
+    "pk": 5,
+    "fields": {
+      "school": 3,
+      "teacher": 7,
+      "visit_date": "2026-11-03",
+      "visit_type": "CLASSROOM",
+      "observations": "Observación de ciencias naturales: experimento sobre el ciclo del agua. Buena organización de materiales.\nSe recomienda cerrar la sesión con una síntesis escrita en el cuaderno.\nSe valora el clima de respeto en el aula.",
+      "created_at": "2026-11-03T14:00:00Z",
+      "updated_at": "2026-11-03T14:00:00Z",
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "visits.visit",
+    "pk": 6,
+    "fields": {
+      "school": 3,
+      "teacher": 8,
+      "visit_date": "2026-11-10",
+      "visit_type": "MEETING",
+      "observations": "Revisión conjunta de los resultados de la evaluación diagnóstica. Definimos dos estrategias de refuerzo para los estudiantes con menor avance en escritura.",
+      "created_at": "2026-11-10T14:00:00Z",
+      "updated_at": "2026-11-10T14:00:00Z",
+      "deleted_at": null
+    }
+  }
+]

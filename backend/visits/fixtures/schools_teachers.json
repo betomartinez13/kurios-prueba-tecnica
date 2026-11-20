@@ -1,0 +1,95 @@
+[
+  {
+    "model": "visits.school",
+    "pk": 1,
+    "fields": {
+      "name": "U.E. Los Samanes"
+    }
+  },
+  {
+    "model": "visits.school",
+    "pk": 2,
+    "fields": {
+      "name": "Colegio El Ávila"
+    }
+  },
+  {
+    "model": "visits.school",
+    "pk": 3,
+    "fields": {
+      "name": "U.E. Monte Claro"
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 1,
+    "fields": {
+      "first_name": "Ana",
+      "last_name": "Pérez",
+      "school": 1
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 2,
+    "fields": {
+      "first_name": "María",
+      "last_name": "Briceño",
+      "school": 1
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 3,
+    "fields": {
+      "first_name": "Pedro",
+      "last_name": "Salazar",
+      "school": 1
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 4,
+    "fields": {
+      "first_name": "Luis",
+      "last_name": "Gómez",
+      "school": 2
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 5,
+    "fields": {
+      "first_name": "Carmen",
+      "last_name": "Rojas",
+      "school": 2
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 6,
+    "fields": {
+      "first_name": "Daniela",
+      "last_name": "Ortiz",
+      "school": 2
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 7,
+    "fields": {
+      "first_name": "José",
+      "last_name": "Medina",
+      "school": 3
+    }
+  },
+  {
+    "model": "visits.teacher",
+    "pk": 8,
+    "fields": {
+      "first_name": "Rosa",
+      "last_name": "Villalobos",
+      "school": 3
+    }
+  }
+]
