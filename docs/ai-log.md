@@ -5,7 +5,7 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 ## Tarea 1 — Esqueleto del repo y del backend (2026-11-19)
 - Generado por IA: estructura del backend (proyecto Django `config`, apps `common` y `visits`, `settings.py` por entorno, `pyproject.toml` con uv, pytest y ruff), `.env.example`, `.python-version`, `.nvmrc` y los tests de configuración.
 - Revisado por el autor: pendiente
-- Corregido o rechazado: Detectado en la revisión automática de la tarea (no por el autor): la primera versión dejaba una `SECRET_KEY` por defecto en `settings.py`; se corrigió para que sea obligatoria por entorno (commit `fix: exige SECRET_KEY por entorno sin valor por defecto`).
+- Corregido o rechazado: Detectado en la revisión automática de la tarea (no por el autor): la primera versión dejaba una `SECRET_KEY` por defecto en `settings.py`; se corrigió para que sea obligatoria por entorno (commit `fix: exige SECRET_KEY por entorno sin valor por defecto`). Además, la IA asumió que `uv` estaba instalado; no lo estaba y se instaló con Homebrew con permiso del autor.
 
 ## Tarea 2 — Modelos, borrado lógico y admin (2026-11-19)
 - Generado por IA: modelos abstractos `TimeStampedModel` y `SoftDeleteModel` (con manager y queryset), modelos `School`, `Teacher` y `Visit` con índices parciales, migración inicial, admin con filtro de estado y acción de restauración, factories y tests. También el fijado de `pytest-env` a una versión con más de dos semanas de antigüedad y la exclusión de migraciones en ruff.
