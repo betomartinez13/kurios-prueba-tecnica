@@ -37,6 +37,39 @@ test("changing school clears the teacher", async ({ page }) => {
   await page.getByLabel("Docente visitado").selectOption({ label: "Ana Pérez" });
   await page.getByLabel("Colegio").selectOption({ label: "Colegio El Ávila" });
   await expect(page.getByLabel("Docente visitado")).toHaveValue("");
+  // Mientras carga la lista nueva el select está vacío de todos modos: se espera a que
+  // cargue y se vuelve al colegio original, cuya lista sí contiene a Ana Pérez.
+  await expect(page.getByLabel("Docente visitado")).toBeEnabled();
+  await page.getByLabel("Colegio").selectOption({ label: "U.E. Los Samanes" });
+  await expect(page.getByLabel("Docente visitado")).toBeEnabled();
+  await expect(page.getByLabel("Docente visitado")).toHaveValue("");
+});
+
+test("a teacher load failure shows an error with retry instead of 'no teachers'", async ({
+  page,
+}) => {
+  await page.route(/\/api\/teachers\//, (r) => r.abort());
+  await page.goto("/visitas/nueva");
+  await page.getByLabel("Colegio").selectOption({ label: "U.E. Los Samanes" });
+  // TanStack Query reintenta antes de dar el error (~7 s).
+  await expect(page.getByText("No se pudieron cargar los docentes.")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Este colegio no tiene docentes registrados")).toHaveCount(0);
+  await page.unroute(/\/api\/teachers\//);
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await page.getByLabel("Docente visitado").selectOption({ label: "Ana Pérez" });
+});
+
+test("a school load failure shows an error with retry", async ({ page }) => {
+  await page.route(/\/api\/schools\//, (r) => r.abort());
+  await page.goto("/visitas/nueva");
+  await expect(page.getByText("No se pudieron cargar los colegios.")).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.unroute(/\/api\/schools\//);
+  await page.getByRole("button", { name: "Reintentar" }).click();
+  await page.getByLabel("Colegio").selectOption({ label: "U.E. Los Samanes" });
 });
 
 test("server-side date error is shown on the field", async ({ page }) => {

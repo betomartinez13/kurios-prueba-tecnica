@@ -31,7 +31,8 @@ function Edit({ id }: { id: number }) {
   const detailHref = `/visitas/${id}`;
 
   if (gone) return <NotFound />;
-  if (visit.isError) {
+  // Solo si no hay datos: un refetch fallido en segundo plano no debe tirar lo que se edita.
+  if (visit.isError && !visit.data) {
     if (isNotFound(visit.error)) return <NotFound />;
     return (
       <ErrorState
@@ -93,7 +94,9 @@ function EditForm({ visit, detailHref, onGone }: EditFormProps) {
         visit_type: visit.visit_type,
         observations: visit.observations,
       }}
-      // El docente de la visita puede haber cambiado de colegio: se ofrece igualmente.
+      // El docente de la visita puede haber cambiado de colegio: se ofrece igualmente en la
+      // lista del colegio de la visita. `school` es el de la visita (la API no da el actual
+      // del docente) y solo decide en qué lista aparece, no si se limpia.
       extraTeacher={{
         id: visit.teacher,
         full_name: visit.teacher_name,
@@ -102,8 +105,12 @@ function EditForm({ visit, detailHref, onGone }: EditFormProps) {
         school: visit.school,
       }}
       schools={schools.data ?? []}
+      schoolsError={schools.isError}
+      onRetrySchools={() => void schools.refetch()}
       teachers={teachers.data ?? []}
       teachersLoading={schoolId !== null && teachers.isPending}
+      teachersError={teachers.isError}
+      onRetryTeachers={() => void teachers.refetch()}
       onSchoolChange={setSchoolId}
       onSubmit={submit}
       // El cliente de API siempre lanza ApiError.

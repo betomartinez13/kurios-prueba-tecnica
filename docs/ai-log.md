@@ -66,3 +66,9 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `lib/forms/visitSchema.ts` (Zod como ayuda de UX, "hoy" calculado al validar, observaciones contadas por puntos de código como el backend, `toVisitInput`), `VisitForm` presentacional (selects de colegio y docente controlados, estados del docente, docente actual de una visita antigua, `max` de la fecha solo en el navegador, foco y centrado del primer error, errores del servidor por campo y aviso para los demás, contador, "Guardando…"), `app/visitas/nueva` y `app/visitas/[id]/editar` (los contenedores cargan colegios y docentes y se los pasan al formulario; 404 al cargar o al guardar muestra `NotFound`), tokens nuevos del formulario y `e2e/form.spec.ts` (6 pruebas; en la de visita eliminada se espera a que cargue el formulario antes de borrarla, para evitar una carrera).
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 13 (corrección 1) — Formulario: docente, errores de carga y refetch (2026-11-19)
+- Generado por IA: la limpieza del docente se decide con la lista ya cargada del colegio nuevo (así volver al colegio del docente lo conserva y `extraTeacher.school` solo decide en qué lista aparece), aviso "No se pudieron cargar los docentes." / "No se pudieron cargar los colegios." con "Reintentar" en vez de "Este colegio no tiene docentes registrados", envío bloqueado mientras cargan los docentes, la edición solo muestra error o NotFound al cargar si no hay datos (un refetch fallido no tira el formulario), y E2E: la prueba de cambio de colegio ahora vuelve al colegio original (antes pasaba aunque no se limpiara) y dos pruebas nuevas de errores de carga.
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
+

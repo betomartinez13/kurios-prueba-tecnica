@@ -33,6 +33,8 @@ const ids: Record<FieldName, string> = {
 };
 const errorId = (field: FieldName) => `${ids[field]}-error`;
 const COUNTER_ID = "visita-observaciones-contador";
+const SCHOOLS_LOAD_ID = "visita-colegio-carga";
+const TEACHERS_LOAD_ID = "visita-docente-carga";
 
 const GENERIC_ERROR = "No se pudo guardar la visita. Revisa tu conexión e inténtalo de nuevo.";
 
@@ -41,12 +43,19 @@ const noopSubscribe = () => () => {};
 type Props = {
   mode: "create" | "edit";
   defaultValues?: Partial<VisitFormValues>;
-  /** Docente actual de una visita antigua: aparece aunque ya no figure en su colegio. */
+  /**
+   * Docente actual de una visita antigua: aparece en la lista del colegio de la visita
+   * (`extraTeacher.school`) aunque ya no figure en ella.
+   */
   extraTeacher?: Teacher;
   schools: School[];
+  schoolsError?: boolean;
+  onRetrySchools?: () => void;
   /** Docentes del colegio elegido; el contenedor los carga a partir de `onSchoolChange`. */
   teachers: Teacher[];
   teachersLoading: boolean;
+  teachersError?: boolean;
+  onRetryTeachers?: () => void;
   onSchoolChange: (schoolId: number | null) => void;
   onSubmit: (values: VisitInput) => Promise<void>;
   serverError?: ApiError | null;
@@ -60,8 +69,12 @@ export function VisitForm({
   defaultValues,
   extraTeacher,
   schools,
+  schoolsError = false,
+  onRetrySchools,
   teachers,
   teachersLoading,
+  teachersError = false,
+  onRetryTeachers,
   onSchoolChange,
   onSubmit,
   serverError,
@@ -72,7 +85,6 @@ export function VisitForm({
     control,
     register,
     handleSubmit,
-    getValues,
     setError,
     setFocus,
     setValue,
@@ -95,6 +107,7 @@ export function VisitForm({
   // "Hoy" solo existe en el navegador: en el prerender no se fija un max.
   const today = useSyncExternalStore(noopSubscribe, todayISO, () => undefined);
   const school = useWatch({ control, name: "school" });
+  const teacher = useWatch({ control, name: "teacher" });
   const observations = useWatch({ control, name: "observations" }) ?? "";
 
   const teacherOptions =
@@ -103,24 +116,28 @@ export function VisitForm({
     !teachers.some((t) => t.id === extraTeacher.id)
       ? [...teachers, extraTeacher]
       : teachers;
-  const noTeachers = school !== "" && !teachersLoading && teacherOptions.length === 0;
-  const teacherDisabled = school === "" || teachersLoading || noTeachers;
+  const teachersReady = school !== "" && !teachersLoading && !teachersError;
+  const noTeachers = teachersReady && teacherOptions.length === 0;
+  const teacherDisabled = !teachersReady || noTeachers;
   const teacherPlaceholder =
     school === ""
       ? "Primero elige un colegio"
       : teachersLoading
         ? "Cargando docentes…"
-        : noTeachers
-          ? "Este colegio no tiene docentes registrados"
-          : "Selecciona un docente";
+        : teachersError
+          ? "No se pudieron cargar los docentes"
+          : noTeachers
+            ? "Este colegio no tiene docentes registrados"
+            : "Selecciona un docente";
 
-  const changeSchool = (next: string) => {
-    onSchoolChange(next === "" ? null : Number(next));
-    // El docente se limpia si no pertenece al colegio nuevo.
-    const teacherId = getValues("teacher");
-    const current = teacherOptions.find((t) => String(t.id) === teacherId);
-    if (teacherId !== "" && String(current?.school) !== next) setValue("teacher", "");
-  };
+  // El docente se limpia si no pertenece al colegio nuevo. Se decide con la lista ya
+  // cargada (los docentes de la API traen su colegio real), no al cambiar el select: así
+  // volver al colegio del docente lo conserva. Si la carga falla, no se toca.
+  const teacherInList = teacherOptions.some((t) => String(t.id) === teacher);
+  const teacherStale = teacher !== "" && (school === "" || (teachersReady && !teacherInList));
+  useEffect(() => {
+    if (teacherStale) setValue("teacher", "");
+  }, [teacherStale, setValue]);
 
   // La barra de navegación es sticky: el campo se centra para que no quede debajo de ella.
   const focusFirst = useCallback(
@@ -195,11 +212,11 @@ export function VisitForm({
               onBlur={field.onBlur}
               onChange={(e) => {
                 field.onChange(e.target.value);
-                changeSchool(e.target.value);
+                onSchoolChange(e.target.value === "" ? null : Number(e.target.value));
               }}
               aria-required="true"
               aria-invalid={invalid("school")}
-              aria-describedby={describedBy("school")}
+              aria-describedby={describedBy("school", ...(schoolsError ? [SCHOOLS_LOAD_ID] : []))}
             >
               <option value="">Selecciona un colegio</option>
               {schools.map((s) => (
@@ -211,6 +228,13 @@ export function VisitForm({
           )}
         />
         <FieldError id={errorId("school")} message={errors.school?.message} />
+        {schoolsError && (
+          <LoadError
+            id={SCHOOLS_LOAD_ID}
+            message="No se pudieron cargar los colegios."
+            onRetry={onRetrySchools}
+          />
+        )}
       </div>
 
       <div className={styles.field}>
@@ -234,7 +258,10 @@ export function VisitForm({
               disabled={teacherDisabled}
               aria-required="true"
               aria-invalid={invalid("teacher")}
-              aria-describedby={describedBy("teacher")}
+              aria-describedby={describedBy(
+                "teacher",
+                ...(teachersError ? [TEACHERS_LOAD_ID] : []),
+              )}
             >
               <option value="">{teacherPlaceholder}</option>
               {!teacherDisabled &&
@@ -247,6 +274,13 @@ export function VisitForm({
           )}
         />
         <FieldError id={errorId("teacher")} message={errors.teacher?.message} />
+        {teachersError && (
+          <LoadError
+            id={TEACHERS_LOAD_ID}
+            message="No se pudieron cargar los docentes."
+            onRetry={onRetryTeachers}
+          />
+        )}
       </div>
 
       <div className={styles.field}>
@@ -315,7 +349,7 @@ export function VisitForm({
       </div>
 
       <div className={styles.actions}>
-        <Button type="submit" disabled={busy || noTeachers}>
+        <Button type="submit" disabled={busy || noTeachers || teachersLoading}>
           {busy ? "Guardando…" : mode === "create" ? "Registrar visita" : "Guardar cambios"}
         </Button>
         <Button variant="ghost" href={onCancelHref}>
@@ -341,5 +375,29 @@ function FieldError({ id, message }: { id: string; message?: string }) {
       <CircleAlert aria-hidden="true" size="1.1em" className={styles.errorIcon} />
       {message}
     </p>
+  );
+}
+
+function LoadError({
+  id,
+  message,
+  onRetry,
+}: {
+  id: string;
+  message: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div id={id} className={styles.loadError} role="alert">
+      <p className={styles.error}>
+        <CircleAlert aria-hidden="true" size="1.1em" className={styles.errorIcon} />
+        {message}
+      </p>
+      {onRetry && (
+        <Button variant="secondary" onClick={onRetry}>
+          Reintentar
+        </Button>
+      )}
+    </div>
   );
 }

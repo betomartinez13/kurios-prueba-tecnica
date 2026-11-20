@@ -41,8 +41,12 @@ export function NewVisitContainer() {
       <VisitForm
         mode="create"
         schools={schools.data ?? []}
+        schoolsError={schools.isError}
+        onRetrySchools={() => void schools.refetch()}
         teachers={teachers.data ?? []}
         teachersLoading={schoolId !== null && teachers.isPending}
+        teachersError={teachers.isError}
+        onRetryTeachers={() => void teachers.refetch()}
         onSchoolChange={setSchoolId}
         onSubmit={submit}
         // El cliente de API siempre lanza ApiError.
