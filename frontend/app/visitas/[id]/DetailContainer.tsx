@@ -93,7 +93,9 @@ function Detail({ id, qs }: { id: number; qs: string }) {
           />
         </>
       ) : (
-        <div className={styles.loading} aria-busy="true" aria-label="Cargando visita" />
+        <div className={styles.loading} role="status">
+          <span className="visually-hidden">Cargando visita…</span>
+        </div>
       )}
     </div>
   );

@@ -181,6 +181,8 @@ export function VisitForm({
     <form
       className={styles.form}
       noValidate
+      // Campos de dominio, no de identidad: que el navegador no proponga autocompletar.
+      autoComplete="off"
       onSubmit={handleSubmit((values) => onSubmit(toVisitInput(values)), focusFirst)}
     >
       {notice.length > 0 && (

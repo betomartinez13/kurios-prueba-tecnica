@@ -58,7 +58,9 @@ function Edit({ id }: { id: number }) {
           onGone={() => setGone(true)}
         />
       ) : (
-        <div className={styles.loading} aria-busy="true" aria-label="Cargando visita" />
+        <div className={styles.loading} role="status">
+          <span className="visually-hidden">Cargando visita…</span>
+        </div>
       )}
     </div>
   );

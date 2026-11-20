@@ -10,6 +10,7 @@
   max-width: var(--dialog-max-width);
   padding: var(--space-5);
   color: var(--kurios-ink);
+  overscroll-behavior: contain;
 
   &::backdrop {
     background: var(--backdrop-color);

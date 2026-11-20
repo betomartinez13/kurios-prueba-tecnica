@@ -108,6 +108,7 @@
   font-weight: var(--font-weight-medium);
   text-decoration: none;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 
   // Stretched link: el enlace cubre toda la fila (tr con position: relative).
   &::after {

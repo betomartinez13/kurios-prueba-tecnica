@@ -9,6 +9,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  color-scheme: light;
 }
 
 body {
@@ -37,6 +38,7 @@ h1 {
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-tight);
   letter-spacing: var(--letter-spacing-title);
+  text-wrap: balance;
 }
 
 a {
@@ -53,6 +55,17 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+// Sin retardo de doble toque en móvil; el resaltado del toque lo dan los estados propios.
+a,
+button,
+input,
+label,
+select,
+textarea {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :focus-visible {
@@ -90,6 +103,10 @@ textarea {
     border-radius: var(--radius-control);
     color: var(--kurios-morado);
   }
+}
+
+.visually-hidden {
+  @include visually-hidden;
 }
 
 .main {

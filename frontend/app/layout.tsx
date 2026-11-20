@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import { Suspense, type ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     default: "Registro de visitas · Kurios",
   },
   description: "Registro de visitas de Kurios Education a colegios.",
+};
+
+// La app solo tiene tema claro: controles nativos y barra del navegador a juego con el fondo.
+export const viewport: Viewport = {
+  themeColor: "#f7f5fb",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
