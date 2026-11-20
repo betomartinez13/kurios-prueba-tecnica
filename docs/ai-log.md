@@ -92,3 +92,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: variables `E2E_FLAGS` y `E2E_SLOWMO` en el `Makefile` (pasan opciones a `playwright test` y fijan la pausa entre acciones), objetivo `make e2e-ver` (navegador visible a 1400 ms por acción; el autor pidió duplicar la pausa inicial de 700 ms y que los tests corran de uno en uno, `--workers=1`), `slowMo` y timeout ampliado en `playwright.config.ts`, y su explicación en el README.
 - Revisado por el autor: el autor pidió poder ver los tests en el navegador y que fueran más lentos.
 - Corregido o rechazado: ninguna
+
+## Revisión del autor (2026-11-20)
+- Generado por IA: la sección «Uso de inteligencia artificial» del README, redactada desde esta bitácora; se quitó la marca de borrador tras la revisión del autor y se añadieron las correcciones de la revisión final.
+- Revisado por el autor: los tres documentos de diseño y el plan (los leyó, aprobó y tomó las decisiones de stack, estilo y arquitectura); la app en el navegador (probó a mano crear, filtrar, ver, editar y eliminar); los E2E en vivo con `make e2e-ver`. Aceptó el texto «No se pudo eliminar la visita. Inténtalo de nuevo.», que propuso la IA para un caso que el spec no definía. Las entradas anteriores conservan «pendiente» porque su revisión no fue tarea por tarea, sino sobre el resultado.
+- Corregido o rechazado: ninguna
