@@ -89,6 +89,6 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Corregido o rechazado: todos los hallazgos los detectó la revisión final automática (no el autor).
 
 ## Ajuste — ver los E2E en el navegador (2026-11-20)
-- Generado por IA: variables `E2E_FLAGS` y `E2E_SLOWMO` en el `Makefile` (pasan opciones a `playwright test` y fijan la pausa entre acciones), objetivo `make e2e-ver` (navegador visible a 700 ms por acción), `slowMo` y timeout ampliado en `playwright.config.ts`, y su explicación en el README.
+- Generado por IA: variables `E2E_FLAGS` y `E2E_SLOWMO` en el `Makefile` (pasan opciones a `playwright test` y fijan la pausa entre acciones), objetivo `make e2e-ver` (navegador visible a 1400 ms por acción; el autor pidió duplicar la pausa inicial de 700 ms), `slowMo` y timeout ampliado en `playwright.config.ts`, y su explicación en el README.
 - Revisado por el autor: el autor pidió poder ver los tests en el navegador y que fueran más lentos.
 - Corregido o rechazado: ninguna

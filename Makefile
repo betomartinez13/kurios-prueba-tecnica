@@ -51,4 +51,4 @@ e2e: .env ## Ejecuta las pruebas end-to-end en un stack aislado
 	exit $$status
 
 e2e-ver: ## Igual que e2e, pero con el navegador visible y a cámara lenta
-	@$(MAKE) --no-print-directory e2e E2E_FLAGS="--headed $(E2E_FLAGS)" E2E_SLOWMO=$(if $(filter 0,$(E2E_SLOWMO)),700,$(E2E_SLOWMO))
+	@$(MAKE) --no-print-directory e2e E2E_FLAGS="--headed $(E2E_FLAGS)" E2E_SLOWMO=$(if $(filter 0,$(E2E_SLOWMO)),1400,$(E2E_SLOWMO))
