@@ -1,0 +1,95 @@
+@use "../../styles/mixins" as *;
+
+.wrapper {
+  position: sticky;
+  top: var(--nav-offset-top);
+  z-index: var(--z-nav);
+  margin-top: var(--nav-offset-top);
+  padding-inline: var(--page-gutter);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: var(--content-max-width);
+  min-height: var(--nav-height);
+  margin-inline: auto;
+  padding: var(--space-3) var(--space-4);
+  background: var(--nav-bg);
+  border-radius: var(--radius-nav);
+  box-shadow: var(--shadow-nav);
+  backdrop-filter: blur(var(--nav-blur));
+
+  @include breakpoint(md) {
+    gap: var(--space-5);
+    padding-inline: var(--space-5);
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--kurios-ink);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.logo {
+  width: var(--logo-width);
+  height: var(--logo-height);
+}
+
+.brandText {
+  @include visually-hidden;
+
+  @include breakpoint(md) {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+  }
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-min-height);
+  color: var(--kurios-slate);
+  text-decoration: none;
+  border-bottom: var(--underline-width) solid transparent;
+  transition:
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+
+  &:hover,
+  &[data-active] {
+    color: var(--kurios-morado-claro);
+  }
+
+  &[data-active] {
+    border-bottom-color: var(--kurios-morado-claro);
+  }
+}
+
+.action {
+  margin-left: auto;
+}
+
+.longLabel {
+  display: none;
+
+  @include breakpoint(md) {
+    display: inline;
+  }
+}
+
+.shortLabel {
+  @include breakpoint(md) {
+    display: none;
+  }
+}

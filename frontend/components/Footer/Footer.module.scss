@@ -1,0 +1,11 @@
+.footer {
+  padding: var(--space-5) var(--page-gutter);
+  background: var(--kurios-footer-gradient);
+}
+
+.text {
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  color: var(--kurios-white);
+  font-size: var(--font-size-sm);
+}

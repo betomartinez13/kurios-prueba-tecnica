@@ -1,0 +1,42 @@
+@use "sass:map";
+
+// Las media queries no admiten variables CSS, por eso los puntos de corte viven en SASS.
+$breakpoints: (
+  md: 640px,
+  lg: 1024px,
+);
+
+// Mobile first: aplica el bloque desde el ancho indicado hacia arriba.
+@mixin breakpoint($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error "Punto de corte desconocido: #{$name}";
+  }
+
+  @media (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  outline: var(--focus-ring-width) solid var(--kurios-morado-claro);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@mixin card {
+  background: var(--kurios-white);
+  border: var(--border-width) solid var(--kurios-line);
+  border-radius: var(--radius-card);
+}
+
+// Oculta un elemento a la vista y lo mantiene para los lectores de pantalla.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

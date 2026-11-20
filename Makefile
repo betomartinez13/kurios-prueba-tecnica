@@ -4,24 +4,26 @@
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
 
-up: ## Levanta la aplicación (crea .env si falta)
-	@test -f .env || cp .env.example .env
+# Sin prerrequisitos: solo se crea si falta y nunca pisa un .env existente.
+.env:
+	cp .env.example .env
+
+up: .env ## Levanta la aplicación (crea .env si falta)
 	docker compose up -d --build --wait
 
-down: ## Detiene los contenedores
+down: .env ## Detiene los contenedores
 	docker compose down
 
-reset: ## Detiene todo y borra la base de datos
+reset: .env ## Detiene todo y borra la base de datos
 	docker compose down -v
 
-logs: ## Sigue los logs
+logs: .env ## Sigue los logs
 	docker compose logs -f
 
-test: ## Ejecuta los tests del backend en Docker
-	@test -f .env || cp .env.example .env
+test: .env ## Ejecuta los tests del backend en Docker
 	docker compose run --rm backend uv run pytest -q
 
-seed: ## Carga los datos de demostración
+seed: .env ## Carga los datos de demostración
 	docker compose exec backend uv run python manage.py seed_demo
 
 lint: ## Ruff check y format --check

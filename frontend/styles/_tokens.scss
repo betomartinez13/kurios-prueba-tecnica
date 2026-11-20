@@ -1,0 +1,93 @@
+// Tokens de Kurios: los únicos valores de color, medida, radio, sombra y tipografía
+// de la app. Los componentes solo leen estas variables.
+// Colores copiados 1:1 de kuriosedu.com (ver docs/superpowers/specs/2026-11-19-frontend-design.md).
+
+@use "mixins" as *;
+
+:root {
+  // Color de marca
+  --kurios-morado: #330072;
+  --kurios-morado-claro: #685bc7;
+  --kurios-morado-05: #f2eef8;
+  --kurios-cream: #f7f5fb;
+  --kurios-ink: #1f1438;
+  --kurios-slate: #4a3f66;
+  --kurios-mute: #8b82a6;
+  --kurios-line: #e3dfec;
+  --kurios-white: #ffffff;
+  --kurios-azul: #00a3e0;
+  --kurios-azul-10: #d9f1fa;
+  --kurios-naranja: #f06400;
+  --kurios-naranja-10: #fce0cc;
+  --kurios-verde: #43b02a;
+  --kurios-footer-gradient: linear-gradient(90deg, #3a0d8c 0%, #1f0050 100%);
+
+  // Estado
+  --color-error: #b42318;
+  --color-error-hover: #912018;
+
+  // Tipografía (Lexend llega como --font-lexend desde next/font)
+  --font-sans: var(--font-lexend), system-ui, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-md: 18px;
+  --font-size-lg: 24px;
+  --font-size-xl: 32px;
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+  --letter-spacing-title: -0.5px;
+
+  // Espaciado
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  // Formas y sombras
+  --radius-control: 13px;
+  --radius-card: 20px;
+  --radius-nav: 24px;
+  --border-width: 1px;
+  --shadow-nav: 0 10px 30px rgba(31, 20, 56, 0.12);
+
+  // Controles
+  --control-min-height: 44px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --underline-width: 2px;
+  --opacity-disabled: 0.6;
+
+  // Disposición
+  --page-gutter: 16px;
+  --content-max-width: 1280px;
+  --nav-height: 71px;
+  --nav-offset-top: 28px;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --nav-blur: 12px;
+  --logo-width: 22px;
+  --logo-height: 30px;
+
+  // Capas
+  --z-nav: 10;
+  --z-skip-link: 20;
+
+  // Movimiento (globals.scss lo anula con prefers-reduced-motion)
+  --duration-fast: 150ms;
+}
+
+@include breakpoint(md) {
+  :root {
+    --page-gutter: 32px;
+  }
+}
+
+@include breakpoint(lg) {
+  :root {
+    --page-gutter: 80px;
+  }
+}
