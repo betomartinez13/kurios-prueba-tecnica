@@ -61,3 +61,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `VisitDetail` (lista de definición, observaciones con `white-space: pre-line`, edición solo si difiere más de un minuto), `ConfirmDialog` (`<dialog>` nativo con `showModal`, foco inicial en Cancelar, Esc cierra), `NotFound`, `app/visitas/[id]/page.tsx` y `DetailContainer.tsx` (ID no numérico, `not_found`, volver con los filtros, eliminar con aviso y regreso al listado), tokens nuevos para el diálogo y `e2e/detail.spec.ts` (3 pruebas).
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 13 — Formulario de registrar y editar (2026-11-19)
+- Generado por IA: `lib/forms/visitSchema.ts` (Zod como ayuda de UX, "hoy" calculado al validar, observaciones contadas por puntos de código como el backend, `toVisitInput`), `VisitForm` presentacional (selects de colegio y docente controlados, estados del docente, docente actual de una visita antigua, `max` de la fecha solo en el navegador, foco y centrado del primer error, errores del servidor por campo y aviso para los demás, contador, "Guardando…"), `app/visitas/nueva` y `app/visitas/[id]/editar` (los contenedores cargan colegios y docentes y se los pasan al formulario; 404 al cargar o al guardar muestra `NotFound`), tokens nuevos del formulario y `e2e/form.spec.ts` (6 pruebas; en la de visita eliminada se espera a que cargue el formulario antes de borrarla, para evitar una carrera).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna

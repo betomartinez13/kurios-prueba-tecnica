@@ -1,0 +1,18 @@
+// Disposición común a /visitas/nueva y /visitas/[id]/editar.
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.back {
+  align-self: flex-start;
+  padding-inline: var(--space-3);
+}
+
+.loading {
+  max-width: var(--form-max-width);
+  min-height: var(--form-skeleton-height);
+  background: var(--kurios-morado-05);
+  border-radius: var(--radius-card);
+}
