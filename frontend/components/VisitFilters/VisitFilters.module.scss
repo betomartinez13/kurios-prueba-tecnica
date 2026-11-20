@@ -35,6 +35,6 @@
   color: var(--kurios-ink);
 
   @include breakpoint(md) {
-    min-width: 14rem;
+    min-width: var(--filter-select-min-width);
   }
 }

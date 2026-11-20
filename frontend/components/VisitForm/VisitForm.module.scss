@@ -81,7 +81,7 @@
 
 .date {
   @include breakpoint(md) {
-    max-width: 16rem;
+    max-width: var(--date-field-max-width);
   }
 }
 

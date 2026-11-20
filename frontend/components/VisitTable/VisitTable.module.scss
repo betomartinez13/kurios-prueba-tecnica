@@ -125,7 +125,7 @@
 .ghost {
   display: block;
   height: var(--space-4);
-  max-width: 70%;
+  max-width: var(--skeleton-line-max-width);
   border-radius: var(--radius-control);
   background: var(--kurios-morado-05);
   animation: pulse 1.2s ease-in-out infinite;

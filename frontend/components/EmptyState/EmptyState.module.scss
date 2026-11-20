@@ -12,6 +12,6 @@
 }
 
 .message {
-  max-width: 48ch;
+  max-width: var(--message-max-width);
   color: var(--kurios-slate);
 }
