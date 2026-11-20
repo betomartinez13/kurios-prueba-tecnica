@@ -56,3 +56,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `TypeBadge`, `VisitTable` (enlace estirado en la celda de la fecha, filas fantasma y apilado por debajo de 640 px), `VisitFilters`, `EmptyState`, `ErrorState`, `app/ListContainer.tsx` (filtros en la URL con nuqs, limpieza de valores inválidos, contador y estados) dentro de `Suspense` en `app/page.tsx`, y `e2e/list.spec.ts` (3 pruebas).
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 12 — Detalle, eliminar y "no encontrada" (2026-11-19)
+- Generado por IA: `VisitDetail` (lista de definición, observaciones con `white-space: pre-line`, edición solo si difiere más de un minuto), `ConfirmDialog` (`<dialog>` nativo con `showModal`, foco inicial en Cancelar, Esc cierra), `NotFound`, `app/visitas/[id]/page.tsx` y `DetailContainer.tsx` (ID no numérico, `not_found`, volver con los filtros, eliminar con aviso y regreso al listado), tokens nuevos para el diálogo y `e2e/detail.spec.ts` (3 pruebas).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
