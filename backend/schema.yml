@@ -1,0 +1,393 @@
+openapi: 3.0.3
+info:
+  title: Registro de visitas API
+  version: 1.0.0
+paths:
+  /api/schools/:
+    get:
+      operationId: schools_list
+      tags:
+      - schools
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/School'
+          description: ''
+  /api/schools/{id}/:
+    get:
+      operationId: schools_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este school.
+        required: true
+      tags:
+      - schools
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/School'
+          description: ''
+  /api/teachers/:
+    get:
+      operationId: teachers_list
+      parameters:
+      - in: query
+        name: school
+        schema:
+          type: integer
+        description: Filtra por id de colegio.
+      tags:
+      - teachers
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Teacher'
+          description: ''
+        '400':
+          description: No response body
+  /api/teachers/{id}/:
+    get:
+      operationId: teachers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un valor de entero único que identifique este teacher.
+        required: true
+      tags:
+      - teachers
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+  /api/visits/:
+    get:
+      operationId: visits_list
+      parameters:
+      - in: query
+        name: school
+        schema:
+          type: integer
+        description: Filtra por id de colegio.
+      - in: query
+        name: visit_type
+        schema:
+          type: string
+          enum:
+          - CLASSROOM
+          - MEETING
+        description: Filtra por tipo de visita.
+      tags:
+      - visits
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VisitOutput'
+          description: ''
+        '400':
+          description: No response body
+    post:
+      operationId: visits_create
+      tags:
+      - visits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitOutput'
+          description: ''
+        '400':
+          description: No response body
+  /api/visits/{id}/:
+    get:
+      operationId: visits_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Id de la visita.
+        required: true
+      tags:
+      - visits
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitOutput'
+          description: ''
+        '404':
+          description: No response body
+    put:
+      operationId: visits_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Id de la visita.
+        required: true
+      tags:
+      - visits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VisitInputRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitOutput'
+          description: ''
+        '400':
+          description: No response body
+        '404':
+          description: No response body
+    patch:
+      operationId: visits_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Id de la visita.
+        required: true
+      tags:
+      - visits
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVisitInputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVisitInputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVisitInputRequest'
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitOutput'
+          description: ''
+        '400':
+          description: No response body
+        '404':
+          description: No response body
+    delete:
+      operationId: visits_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Id de la visita.
+        required: true
+      tags:
+      - visits
+      security:
+      - {}
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: No response body
+components:
+  schemas:
+    PatchedVisitInputRequest:
+      type: object
+      properties:
+        school:
+          type: integer
+        teacher:
+          type: integer
+        visit_date:
+          type: string
+          format: date
+        visit_type:
+          $ref: '#/components/schemas/VisitTypeEnum'
+        observations:
+          type: string
+          minLength: 1
+          maxLength: 5000
+    School:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+      required:
+      - id
+      - name
+    Teacher:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        full_name:
+          type: string
+          readOnly: true
+        school:
+          type: integer
+      required:
+      - first_name
+      - full_name
+      - id
+      - last_name
+      - school
+    VisitInputRequest:
+      type: object
+      properties:
+        school:
+          type: integer
+        teacher:
+          type: integer
+        visit_date:
+          type: string
+          format: date
+        visit_type:
+          $ref: '#/components/schemas/VisitTypeEnum'
+        observations:
+          type: string
+          minLength: 1
+          maxLength: 5000
+      required:
+      - observations
+      - school
+      - teacher
+      - visit_date
+      - visit_type
+    VisitOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        school:
+          type: integer
+          readOnly: true
+        school_name:
+          type: string
+          readOnly: true
+        teacher:
+          type: integer
+          readOnly: true
+        teacher_name:
+          type: string
+          readOnly: true
+        visit_date:
+          type: string
+          format: date
+          readOnly: true
+        visit_type:
+          allOf:
+          - $ref: '#/components/schemas/VisitTypeEnum'
+          readOnly: true
+        visit_type_label:
+          type: string
+          readOnly: true
+        observations:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - observations
+      - school
+      - school_name
+      - teacher
+      - teacher_name
+      - updated_at
+      - visit_date
+      - visit_type
+      - visit_type_label
+    VisitTypeEnum:
+      enum:
+      - CLASSROOM
+      - MEETING
+      type: string
+      description: |-
+        * `CLASSROOM` - Visita en aula
+        * `MEETING` - Encuentro

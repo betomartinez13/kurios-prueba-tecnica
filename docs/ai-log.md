@@ -21,3 +21,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `visits/services.py` (`visit_create`, `visit_update`, `visit_soft_delete` y `_validate_visit`) con las reglas de fecha, coherencia colegio-docente y observaciones, y sus tests, incluido el límite de zona horaria de Caracas.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 5 — API REST, manejador de errores y schema OpenAPI (2026-11-19)
+- Generado por IA: serializers de entrada y salida con mensajes en español, `VisitViewSet`, `SchoolViewSet` y `TeacherViewSet`, rutas y documentación (`/api/schema/`, `/api/docs/`), el manejador de errores que traduce `ValidationError` de Django al formato de DRF, `backend/schema.yml` generado con drf-spectacular y los tests de la API.
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
