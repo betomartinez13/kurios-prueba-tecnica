@@ -31,3 +31,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: fixtures de colegios, docentes y seis visitas de ejemplo (ficticias, con observaciones en español y fechas de octubre y noviembre de 2026), el comando `seed_demo` idempotente (las visitas solo se cargan si `Visit.all_objects` está vacío; el superusuario sale de las variables de entorno y se omite con aviso si faltan) y sus tests.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 7 — Docker del backend, compose y Makefile (2026-11-19)
+- Generado por IA: `backend/Dockerfile` (python:3.13-slim, uv 0.13.9 fijado, entorno virtual en `/opt/venv`), `backend/.dockerignore`, `docker-compose.yml` (db `postgres:17` y backend con healthchecks y orden de arranque) y `Makefile` (`up`, `down`, `reset`, `logs`, `test`, `seed`, `lint`, y marcadores para `types` y `e2e`).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
