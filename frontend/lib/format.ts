@@ -9,11 +9,6 @@ const longDate = new Intl.DateTimeFormat("es-VE", {
   month: "long",
   year: "numeric",
 });
-const timeShort = new Intl.DateTimeFormat("es-VE", {
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 /** Lee YYYY-MM-DD como fecha local (new Date("YYYY-MM-DD") la lee en UTC). */
 function parseLocalDate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -37,8 +32,7 @@ export function formatLongDate(iso: string): string {
   return longDate.format(parseLocalDate(iso));
 }
 
-/** Para "Registrada el…"; recibe un instante ISO con zona horaria. */
+/** Solo la fecha local (sin hora) de un instante ISO, para "Registrada el…". */
 export function formatDateTimeShort(iso: string): string {
-  const date = new Date(iso);
-  return `${shortDateOf(date)}, ${timeShort.format(date)}`;
+  return shortDateOf(new Date(iso));
 }
