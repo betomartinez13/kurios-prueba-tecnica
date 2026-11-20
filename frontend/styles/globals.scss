@@ -10,6 +10,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   color-scheme: light;
+  // La barra flotante es sticky: lo que recibe foco o scroll no queda debajo de ella.
+  scroll-padding-top: calc(var(--nav-offset-top) + var(--nav-height) + var(--space-4));
 }
 
 body {

@@ -140,12 +140,14 @@ export function VisitForm({
   }, [teacherStale, setValue]);
 
   // La barra de navegación es sticky: el campo se centra para que no quede debajo de ella.
+  // Se busca por `name` y no por document.activeElement: en los campos con Controller el
+  // foco llega después y se centraría el botón de enviar.
   const focusFirst = useCallback(
     (invalidFields: Partial<Record<FieldName, unknown>>) => {
       const first = FIELDS.find((field) => invalidFields[field]);
       if (!first) return;
       setFocus(first);
-      document.activeElement?.scrollIntoView({ block: "center" });
+      document.querySelector(`[name="${first}"]`)?.scrollIntoView({ block: "center" });
     },
     [setFocus],
   );
