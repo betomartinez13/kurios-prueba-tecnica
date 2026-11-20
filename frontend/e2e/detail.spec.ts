@@ -30,6 +30,17 @@ test("back link keeps list filters", async ({ page, request }) => {
   await expect(page).toHaveURL(/school=2/);
 });
 
+test("edit keeps list filters through save and back to the list", async ({ page, request }) => {
+  const v = await createVisitViaApi(request, { school: 2 });
+  await page.goto(`/visitas/${v.id}?school=2`);
+  await page.getByRole("link", { name: "Editar" }).click();
+  await expect(page).toHaveURL(new RegExp(`/visitas/${v.id}/editar\\?school=2`));
+  await page.getByRole("button", { name: /guardar/i }).click();
+  await expect(page).toHaveURL(new RegExp(`/visitas/${v.id}\\?school=2`));
+  await page.getByRole("link", { name: "Volver a visitas" }).click();
+  await expect(page).toHaveURL(/\/\?school=2/);
+});
+
 test("non-numeric id shows not found", async ({ page }) => {
   await page.goto("/visitas/abc");
   await expect(page.getByText("Esta visita no existe o fue eliminada.")).toBeVisible();

@@ -77,7 +77,7 @@ function Detail({ id, qs }: { id: number; qs: string }) {
         <>
           <VisitDetail visit={visit.data} />
           <div className={styles.actions}>
-            <Button href={`/visitas/${id}/editar`}>Editar</Button>
+            <Button href={`/visitas/${id}/editar${qs}`}>Editar</Button>
             <Button variant="ghost" onClick={() => setConfirming(true)}>
               Eliminar visita
             </Button>

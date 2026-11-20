@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,22 +18,32 @@ import styles from "../../FormPage.module.scss";
 
 export function EditContainer() {
   const params = useParams<{ id: string }>();
-  if (!/^\d+$/.test(params.id)) return <NotFound />;
-  return <Edit id={Number(params.id)} />;
+  const searchParams = useSearchParams();
+
+  // Se conservan los filtros del listado para que "Volver a visitas" regrese al listado filtrado.
+  const query = new URLSearchParams();
+  for (const key of ["school", "visit_type"]) {
+    const value = searchParams.get(key);
+    if (value !== null) query.set(key, value);
+  }
+  const qs = query.size > 0 ? `?${query.toString()}` : "";
+
+  if (!/^\d+$/.test(params.id)) return <NotFound backHref={`/${qs}`} />;
+  return <Edit id={Number(params.id)} qs={qs} />;
 }
 
 const isNotFound = (error: unknown) => error instanceof ApiError && error.kind === "not_found";
 
-function Edit({ id }: { id: number }) {
+function Edit({ id, qs }: { id: number; qs: string }) {
   const visit = useVisit(id);
   // Si al guardar la API responde 404 (se eliminó desde otra pestaña), también se muestra NotFound.
   const [gone, setGone] = useState(false);
-  const detailHref = `/visitas/${id}`;
+  const detailHref = `/visitas/${id}${qs}`;
 
-  if (gone) return <NotFound />;
+  if (gone) return <NotFound backHref={`/${qs}`} />;
   // Solo si no hay datos: un refetch fallido en segundo plano no debe tirar lo que se edita.
   if (visit.isError && !visit.data) {
-    if (isNotFound(visit.error)) return <NotFound />;
+    if (isNotFound(visit.error)) return <NotFound backHref={`/${qs}`} />;
     return (
       <ErrorState
         message="No se pudo conectar con el servidor. Revisa que el backend esté en marcha y vuelve a intentarlo."
