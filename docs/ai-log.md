@@ -16,3 +16,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `VisitFilter` y `TeacherFilter` (django-filter), selectors de lectura (`visit_list`, `visit_get`, `school_list`, `teacher_list`) con error de validación por campo, y sus tests.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 4 — Servicios y reglas de negocio (2026-11-19)
+- Generado por IA: `visits/services.py` (`visit_create`, `visit_update`, `visit_soft_delete` y `_validate_visit`) con las reglas de fecha, coherencia colegio-docente y observaciones, y sus tests, incluido el límite de zona horaria de Caracas.
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
