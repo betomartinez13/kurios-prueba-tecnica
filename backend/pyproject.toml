@@ -17,7 +17,7 @@ dev = [
     "factory-boy>=3.3.3",
     "pytest>=9.2.0",
     "pytest-django>=4.14.0",
-    "pytest-env>=1.8.7",
+    "pytest-env<=1.8.5",
     "ruff>=0.17.6",
 ]
 
@@ -29,6 +29,7 @@ env = ["SECRET_KEY=test-secret-key-solo-para-tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+extend-exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "DJ"]
