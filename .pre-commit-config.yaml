@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.6
+    hooks:
+      - id: ruff-check
+        files: ^backend/
+        args: [--fix]
+      - id: ruff-format
+        files: ^backend/
+  - repo: local
+    hooks:
+      # Local para usar el prettier fijado en frontend/package.json y su .prettierignore.
+      - id: prettier
+        name: prettier (frontend)
+        language: system
+        files: ^frontend/
+        entry: bash -c 'cd frontend && npx prettier --write --ignore-unknown "${@#frontend/}"' --
+      - id: eslint
+        name: eslint (frontend)
+        language: system
+        files: ^frontend/.*\.(js|jsx|mjs|ts|tsx)$
+        pass_filenames: false
+        entry: npm --prefix frontend run lint

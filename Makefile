@@ -34,5 +34,14 @@ types: ## Regenera los tipos del frontend
 	cd frontend && npx openapi-typescript ../backend/schema.yml -o lib/api/schema.d.ts
 	cd frontend && npx prettier --write lib/api/schema.d.ts
 
-e2e: ## Ejecuta las pruebas end-to-end
-	@echo "pendiente (Tarea 14)"
+# Proyecto compose "e2e" aparte (puertos 3100/8100 y volumen propio): no toca la demo.
+# Devuelve el código de salida de Playwright y siempre desmonta, incluso si falla.
+e2e: .env ## Ejecuta las pruebas end-to-end en un stack aislado
+	@FRONTEND_PORT=3100 BACKEND_PORT=8100 docker compose -p e2e up -d --build --wait; \
+	status=$$?; \
+	if [ $$status -eq 0 ]; then \
+		(cd frontend && E2E_BASE_URL=http://localhost:3100 npx playwright test); \
+		status=$$?; \
+	fi; \
+	FRONTEND_PORT=3100 BACKEND_PORT=8100 docker compose -p e2e down -v; \
+	exit $$status

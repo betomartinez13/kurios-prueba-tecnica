@@ -72,3 +72,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
 
+
+## Tarea 14 — E2E aislado, CI y pre-commit (2026-11-19)
+- Generado por IA: `make e2e` (proyecto compose `e2e` en los puertos 3100/8100 con volumen propio, devuelve el código de salida de Playwright y siempre ejecuta `down -v`), `.github/workflows/ci.yml` (jobs `backend` y `frontend`, incluida la comprobación de que `schema.yml` y `schema.d.ts` están al día) y `.pre-commit-config.yaml` (ruff y ruff-format solo en `backend/`, prettier y eslint locales sobre `frontend/`).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
