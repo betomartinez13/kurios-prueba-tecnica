@@ -1,5 +1,9 @@
 .DEFAULT_GOAL := help
-.PHONY: help up down reset logs test seed lint types e2e
+.PHONY: help up down reset logs test seed lint types e2e e2e-ver
+
+# Opciones de Playwright para `make e2e`, p. ej. `make e2e E2E_FLAGS=--headed E2E_SLOWMO=500`.
+E2E_FLAGS ?=
+E2E_SLOWMO ?= 0
 
 help: ## Muestra esta ayuda
 	@grep -E '^[a-z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
@@ -40,8 +44,11 @@ e2e: .env ## Ejecuta las pruebas end-to-end en un stack aislado
 	@FRONTEND_PORT=3100 BACKEND_PORT=8100 docker compose -p e2e up -d --build --wait; \
 	status=$$?; \
 	if [ $$status -eq 0 ]; then \
-		(cd frontend && E2E_BASE_URL=http://localhost:3100 npx playwright test); \
+		(cd frontend && E2E_BASE_URL=http://localhost:3100 E2E_SLOWMO=$(E2E_SLOWMO) npx playwright test $(E2E_FLAGS)); \
 		status=$$?; \
 	fi; \
 	FRONTEND_PORT=3100 BACKEND_PORT=8100 docker compose -p e2e down -v; \
 	exit $$status
+
+e2e-ver: ## Igual que e2e, pero con el navegador visible y a cámara lenta
+	@$(MAKE) --no-print-directory e2e E2E_FLAGS="--headed $(E2E_FLAGS)" E2E_SLOWMO=$(if $(filter 0,$(E2E_SLOWMO)),700,$(E2E_SLOWMO))

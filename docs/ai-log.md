@@ -87,3 +87,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: correcciones de los hallazgos de la revisión final automática de la rama: (1) un id de colegio inexistente en la URL (`/?school=999`) se descarta de la URL y no se pide a la API, el listado distingue errores de red/servidor del resto y muestra el fallo de la lista de colegios, con E2E; (2) 404 y filtros 400 de la API en español tuteando (con asserts en pytest); (3) medidas literales de los estilos de componentes movidas a `_tokens.scss`; (4) "Editar" conserva los filtros del listado, también al cancelar o guardar; (5) las consultas no reintentan errores `validation` ni `not_found`; (6) `.superpowers/` ignorado en git.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: todos los hallazgos los detectó la revisión final automática (no el autor).
+
+## Ajuste — ver los E2E en el navegador (2026-11-20)
+- Generado por IA: variables `E2E_FLAGS` y `E2E_SLOWMO` en el `Makefile` (pasan opciones a `playwright test` y fijan la pausa entre acciones), objetivo `make e2e-ver` (navegador visible a 700 ms por acción), `slowMo` y timeout ampliado en `playwright.config.ts`, y su explicación en el README.
+- Revisado por el autor: el autor pidió poder ver los tests en el navegador y que fueran más lentos.
+- Corregido o rechazado: ninguna
