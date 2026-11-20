@@ -30,7 +30,9 @@ lint: ## Ruff check y format --check
 	cd backend && uv run ruff check . && uv run ruff format --check .
 
 types: ## Regenera los tipos del frontend
-	@echo "pendiente (Tarea 9)"
+	docker compose run --rm --no-deps backend uv run python manage.py spectacular --file schema.yml --validate
+	cd frontend && npx openapi-typescript ../backend/schema.yml -o lib/api/schema.d.ts
+	cd frontend && npx prettier --write lib/api/schema.d.ts
 
 e2e: ## Ejecuta las pruebas end-to-end
 	@echo "pendiente (Tarea 14)"

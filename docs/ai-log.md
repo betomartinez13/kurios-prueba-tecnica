@@ -41,3 +41,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: app Next.js con `create-next-app` (se usa 16.4.5, la última 16.x con más de dos semanas; 16.4.6 tenía diez días), dependencias fijadas a versiones exactas con más de dos semanas, tokens de Kurios (`styles/_tokens.scss`), mixins (`focus-ring`, `card`, `breakpoint`, `visually-hidden`), `globals.scss`, layout con Lexend, `Providers` (TanStack Query + nuqs), `NavBar` (con fallback en `Suspense` por `cacheComponents`), `Footer`, `Button`, `next.config.ts` con `skipTrailingSlashRedirect` y rewrites a Django, `Dockerfile`, servicio `frontend` en compose y el objetivo `.env` del `Makefile` para que `down`, `reset`, `logs`, `test` y `seed` funcionen en un clon limpio.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 9 — Contrato generado y cliente de API (2026-11-19)
+- Generado por IA: objetivo `make types` (schema de drf-spectacular en Docker, `openapi-typescript` y prettier), `frontend/lib/api/schema.d.ts` generado, `types.ts` (alias de los tipos generados, sin tipos escritos a mano), `errors.ts` (`ApiError` y `normalizeError`) y `client.ts` (cliente `openapi-fetch` y funciones que lanzan `ApiError`).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
