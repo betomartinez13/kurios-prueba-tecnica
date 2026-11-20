@@ -40,21 +40,27 @@ def test_list_filters_and_hides_deleted(api):
 
 
 def test_list_invalid_filter_returns_400(api):
-    assert api.get("/api/visits/?visit_type=XYZ").status_code == 400
-    assert api.get("/api/visits/?school=abc").status_code == 400
+    r = api.get("/api/visits/?visit_type=XYZ")
+    assert r.status_code == 400
+    assert r.json() == {"visit_type": ["Elige un tipo de visita válido."]}
+    r = api.get("/api/visits/?school=abc")
+    assert r.status_code == 400
+    assert r.json() == {"school": ["Elige un colegio válido."]}
 
 
 def test_list_nonexistent_school_returns_400(api):
     r = api.get("/api/visits/?school=999999")
     assert r.status_code == 400
-    assert "school" in r.json()
+    assert r.json() == {"school": ["Elige un colegio válido."]}
 
 
 def test_retrieve_update_delete_deleted_visit_return_404(api, teacher, payload):
     vid = _create(api, teacher, payload)
     assert api.delete(f"/api/visits/{vid}/").status_code == 204
     url = f"/api/visits/{vid}/"
-    assert api.get(url).status_code == 404
+    r = api.get(url)
+    assert r.status_code == 404
+    assert r.json() == {"detail": "Esta visita no existe o fue eliminada."}
     assert api.put(url, payload(teacher), format="json").status_code == 404
     assert api.patch(url, {"observations": "x"}, format="json").status_code == 404
     assert api.delete(url).status_code == 404
