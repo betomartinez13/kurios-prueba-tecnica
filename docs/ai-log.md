@@ -46,3 +46,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: objetivo `make types` (schema de drf-spectacular en Docker, `openapi-typescript` y prettier), `frontend/lib/api/schema.d.ts` generado, `types.ts` (alias de los tipos generados, sin tipos escritos a mano), `errors.ts` (`ApiError` y `normalizeError`) y `client.ts` (cliente `openapi-fetch` y funciones que lanzan `ApiError`).
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 10 — Hooks de datos, formato de fechas y Playwright (2026-11-19)
+- Generado por IA: claves de caché (`lib/queries/keys.ts`), hooks de TanStack Query para visitas y catálogos, `lib/format.ts` (fechas en es-VE leídas como fecha local y sin puntos en las abreviaturas), `lib/today.ts`, `playwright.config.ts`, `e2e/helpers.ts` y una prueba de humo (`e2e/smoke.spec.ts`) que crea y borra una visita por la API.
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
