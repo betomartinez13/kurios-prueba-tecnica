@@ -77,3 +77,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: `make e2e` (proyecto compose `e2e` en los puertos 3100/8100 con volumen propio, devuelve el código de salida de Playwright y siempre ejecuta `down -v`), `.github/workflows/ci.yml` (jobs `backend` y `frontend`, incluida la comprobación de que `schema.yml` y `schema.d.ts` están al día) y `.pre-commit-config.yaml` (ruff y ruff-format solo en `backend/`, prettier y eslint locales sobre `frontend/`).
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 15 — Auditoría de interfaz, pasada exploratoria y README (2026-11-19)
+- Generado por IA: auditoría con `web-design-guidelines` y sus ajustes (esqueletos de carga con `role="status"`, `viewport` con `colorScheme` y `themeColor`, `touch-action`, `text-wrap: balance`, cifras tabulares en las fechas, `overscroll-behavior` en el diálogo, `autocomplete="off"` en el formulario y `translate="no"` en la marca); pasada exploratoria con `webapp-testing` a 375 y 1440 px, que encontró que a 375 px el primer campo con error quedaba bajo la barra fija (`focusFirst` centraba el botón de enviar porque el foco de los campos con `Controller` llega después; se centra el campo por `name` y `html` tiene `scroll-padding-top`); `docs/screenshot-listado.png`; el manejador de errores manda un `ValidationError` sin campos a `non_field_errors` (con test); permisos de solo lectura y `concurrency` en la CI; `README.md` con el borrador de «Uso de inteligencia artificial».
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna
