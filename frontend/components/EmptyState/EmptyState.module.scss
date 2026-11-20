@@ -1,0 +1,17 @@
+@use "../../styles/mixins" as *;
+
+.state {
+  @include card;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-7) var(--space-4);
+  text-align: center;
+}
+
+.message {
+  max-width: 48ch;
+  color: var(--kurios-slate);
+}

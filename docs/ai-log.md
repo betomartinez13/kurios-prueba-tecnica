@@ -51,3 +51,8 @@ Este documento registra qué partes del proyecto fueron generadas con ayuda de I
 - Generado por IA: claves de caché (`lib/queries/keys.ts`), hooks de TanStack Query para visitas y catálogos, `lib/format.ts` (fechas en es-VE leídas como fecha local y sin puntos en las abreviaturas), `lib/today.ts`, `playwright.config.ts`, `e2e/helpers.ts` y una prueba de humo (`e2e/smoke.spec.ts`) que crea y borra una visita por la API.
 - Revisado por el autor: pendiente
 - Corregido o rechazado: ninguna
+
+## Tarea 11 — Pantalla de listado (2026-11-19)
+- Generado por IA: `TypeBadge`, `VisitTable` (enlace estirado en la celda de la fecha, filas fantasma y apilado por debajo de 640 px), `VisitFilters`, `EmptyState`, `ErrorState`, `app/ListContainer.tsx` (filtros en la URL con nuqs, limpieza de valores inválidos, contador y estados) dentro de `Suspense` en `app/page.tsx`, y `e2e/list.spec.ts` (3 pruebas).
+- Revisado por el autor: pendiente
+- Corregido o rechazado: ninguna

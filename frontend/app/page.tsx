@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+
+import { ListContainer } from "./ListContainer";
 
 export const metadata: Metadata = {
   // La plantilla "%s · Kurios" del layout raíz solo se aplica a los segmentos hijos,
@@ -7,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function VisitsPage() {
-  return <h1>Visitas</h1>;
+  return (
+    // useQueryStates / useSearchParams leen la URL: con cacheComponents necesitan Suspense.
+    <Suspense>
+      <ListContainer />
+    </Suspense>
+  );
 }
