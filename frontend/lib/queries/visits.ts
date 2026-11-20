@@ -4,10 +4,11 @@ import { createVisit, deleteVisit, getVisit, listVisits, updateVisit } from "@/l
 import type { VisitFilters, VisitInput } from "@/lib/api/types";
 import { visitKeys } from "./keys";
 
-export function useVisits(f: VisitFilters) {
+export function useVisits(f: VisitFilters, enabled = true) {
   return useQuery({
     queryKey: visitKeys.list(f),
     queryFn: () => listVisits(f),
+    enabled,
   });
 }
 

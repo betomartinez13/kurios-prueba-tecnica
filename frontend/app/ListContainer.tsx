@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ErrorState/ErrorState";
 import { VisitFilters } from "@/components/VisitFilters/VisitFilters";
 import { VisitTable } from "@/components/VisitTable/VisitTable";
+import { ApiError } from "@/lib/api/errors";
 import type { Visit, VisitFilters as Filters } from "@/lib/api/types";
 import { useSchools } from "@/lib/queries/catalog";
 import { useVisits } from "@/lib/queries/visits";
@@ -24,17 +25,25 @@ export function ListContainer() {
   const [filters, setFilters] = useQueryStates(filterParsers);
   const searchParams = useSearchParams();
   const schools = useSchools();
-  const visits = useVisits(filters);
+
+  // Un colegio de la URL que no está en la lista cargada es obsoleto (id inexistente): se
+  // descarta sin pedirlo a la API. Si la lista de colegios falla no se bloquea el listado.
+  const schoolKnown =
+    filters.school === null ||
+    schools.isError ||
+    schools.data?.some((s) => s.id === filters.school);
+  const schoolStale = filters.school !== null && schools.data !== undefined && !schoolKnown;
+  const visits = useVisits(filters, schoolKnown === true);
 
   // Un valor inválido escrito a mano en la URL se ignora y se quita de ella.
   const rawSchool = searchParams.get("school");
   const rawType = searchParams.get("visit_type");
   useEffect(() => {
     const stale: Partial<Filters> = {};
-    if (rawSchool !== null && filters.school === null) stale.school = null;
+    if (rawSchool !== null && (filters.school === null || schoolStale)) stale.school = null;
     if (rawType !== null && filters.visit_type === null) stale.visit_type = null;
     if (Object.keys(stale).length > 0) void setFilters(stale, { history: "replace" });
-  }, [rawSchool, rawType, filters.school, filters.visit_type, setFilters]);
+  }, [rawSchool, rawType, filters.school, filters.visit_type, schoolStale, setFilters]);
 
   const hasFilters = filters.school !== null || filters.visit_type !== null;
   const clear = () => void setFilters({ school: null, visit_type: null });
@@ -49,9 +58,16 @@ export function ListContainer() {
 
   let body;
   if (visits.isError) {
+    const connection =
+      visits.error instanceof ApiError &&
+      (visits.error.kind === "network" || visits.error.kind === "server");
     body = (
       <ErrorState
-        message="No se pudo conectar con el servidor. Revisa que el backend esté en marcha y vuelve a intentarlo."
+        message={
+          connection
+            ? "No se pudo conectar con el servidor. Revisa que el backend esté en marcha y vuelve a intentarlo."
+            : "No se pudieron cargar las visitas. Inténtalo de nuevo."
+        }
         onRetry={() => void visits.refetch()}
       />
     );
@@ -91,6 +107,12 @@ export function ListContainer() {
         onChange={(next) => void setFilters(next)}
         onClear={clear}
       />
+      {schools.isError && (
+        <ErrorState
+          message="No se pudo cargar la lista de colegios. Vuelve a intentarlo."
+          onRetry={() => void schools.refetch()}
+        />
+      )}
       {body}
     </div>
   );

@@ -29,6 +29,13 @@ test("invalid filter in the URL is ignored and removed", async ({ page }) => {
   await expect(page.getByRole("table")).toBeVisible();
 });
 
+test("unknown school id in the URL is ignored and removed", async ({ page }) => {
+  await page.goto("/?school=999");
+  await expect(page).not.toHaveURL(/school=/);
+  await expect(page.getByRole("table")).toBeVisible();
+  await expect(page.getByText("No se pudo conectar con el servidor")).toHaveCount(0);
+});
+
 test("each row exposes a single link to the detail", async ({ page, request }) => {
   const v = await createVisitViaApi(request);
   await page.goto("/");
